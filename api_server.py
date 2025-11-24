@@ -21,6 +21,8 @@ from pptx.util import Inches, Pt
 from pptx.enum.text import MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from PIL import Image as PILImage
+import logging
+from datetime import datetime
 
 # ===== CONFIGURATION =====
 try:
@@ -37,6 +39,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # Define all paths from config
 FABRIC_DIR = os.path.join(PROJECT_ROOT, PATHS.get('fabric_dir', 'fabrics'))
 MOCKUP_DIR_TEMPLATES = os.path.join(PROJECT_ROOT, PATHS.get('mockup_dir', 'mockups')) 
+SILHOUETTE_DIR = os.path.join(PROJECT_ROOT, PATHS.get('silhouette_dir', 'silhouettes'))  # Directory for silhouette images
 MASK_DIR = os.path.join(PROJECT_ROOT, PATHS.get('mask_dir', 'masks'))
 MOCKUP_DIR_OUTPUT = os.path.join(PROJECT_ROOT, PATHS.get('mockup_output_dir', 'generated_mockups')) 
 TECHPACK_DIR = os.path.join(PROJECT_ROOT, PATHS.get('pdf_output_dir', 'generated_techpacks'))
@@ -45,7 +48,7 @@ FABRIC_SWATCH_DIR = os.path.join(PROJECT_ROOT, PATHS.get('fabric_swatch_dir', 'f
 IMAGE_DIR = os.path.join(PROJECT_ROOT, 'images') # New: Explicit Images folder
 
 # Ensure critical directories exist
-for d in [MOCKUP_DIR_OUTPUT, TECHPACK_DIR, IMAGE_DIR]:
+for d in [MOCKUP_DIR_OUTPUT, TECHPACK_DIR, IMAGE_DIR, SILHOUETTE_DIR]:
     if not os.path.exists(d):
         os.makedirs(d)
 
@@ -58,9 +61,34 @@ app = Flask(__name__)
 # !!! IMPORTANT CHANGE: Allow all origins for Tunneling (VS Code/Ngrok) !!!
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+# Request logging middleware
+@app.before_request
+def log_request_info():
+    if request.path.startswith('/api'):
+        logger.info(f"[API] {request.method} {request.path}")
+        if request.args:
+            logger.info(f"      Query params: {dict(request.args)}")
+        if request.is_json:
+            logger.info(f"      Body: {request.json}")
+
+@app.after_request
+def log_response_info(response):
+    if request.path.startswith('/api'):
+        logger.info(f"[API] {request.method} {request.path} -> {response.status_code}")
+    return response
+
 print("=" * 60)
 print("SRX Fabric Library - API Server (v5.1)")
 print("   Running on: http://localhost:5000")
+print("   API Logging: ENABLED")
 print("=" * 60)
 
 # ===== HELPER FUNCTIONS =====
@@ -126,16 +154,18 @@ def get_fabric_groups():
         elif 'group name' in df.columns: group_col = 'group name'
         
         if not group_col:
+            logger.warning("No group column found in database")
             return jsonify([])
 
         # Extract, Clean, Unique, Sort
         raw_groups = df[group_col].dropna().unique()
         cleaned_groups = sorted(list(set([clean_group_name(str(g)) for g in raw_groups if str(g).strip()])))
         
+        logger.info(f"      Returning {len(cleaned_groups)} fabric groups")
         return jsonify(cleaned_groups)
         
     except Exception as e:
-        print(f"Error fetching groups: {e}")
+        logger.error(f"Error fetching groups: {e}")
         return jsonify([])
 
 
@@ -149,9 +179,12 @@ def find_fabrics():
     filter_group = request.args.get('group', '').lower().strip()
     filter_weight = request.args.get('weight', '').lower().strip()
 
+    logger.info(f"      Search: '{search_term}' | Group: '{filter_group}' | Weight: '{filter_weight}' | Page: {page} | Limit: {limit}")
+
     try:
         df = pd.read_excel(DATABASE_PATH)
     except Exception as e:
+        logger.error(f"Database read error: {e}")
         return jsonify({"error": f"Database read error: {str(e)}"}), 500
 
     # Normalize columns
@@ -217,6 +250,8 @@ def find_fabrics():
     # Slice dataframe for current page
     paginated_matches = matches.iloc[start_idx:end_idx]
 
+    logger.info(f"      Found {total_matches} total matches, returning {len(paginated_matches)} results (page {page})")
+
     results = []
     for _, row in paginated_matches.iterrows():
         ref_code = row.get('ref', 'N/A')
@@ -246,6 +281,7 @@ def find_fabrics():
 @app.route('/api/garments')
 def get_available_garments():
     try:
+        logger.info("      Fetching available garments from mask directory")
         garments_dict = {}
         mask_files = os.listdir(MASK_DIR)
         
@@ -263,9 +299,17 @@ def get_available_garments():
             garment_name_for_api = base_name  # Keep EXACT casing with underscores for file matching
             garment_name_display = base_name.replace('_', ' ').strip().title()  # For display only
             
-            # Find silhouette image using exact base_name
-            img_filename = find_file(MOCKUP_DIR_TEMPLATES, f"{base_name}_face") or find_file(MOCKUP_DIR_TEMPLATES, base_name)
-            img_url = f"/static/mockup-templates/{img_filename}" if img_filename else None
+            # Find silhouette image - prefer actual silhouette images, fallback to face images
+            # First try silhouette directory with _silhouette suffix
+            img_filename = find_file(SILHOUETTE_DIR, f"{base_name}_silhouette") or find_file(SILHOUETTE_DIR, base_name)
+            if img_filename:
+                img_url = f"/static/silhouettes/{img_filename}"
+                is_silhouette = True
+            else:
+                # Fallback to mockup templates (full-color images)
+                img_filename = find_file(MOCKUP_DIR_TEMPLATES, f"{base_name}_face") or find_file(MOCKUP_DIR_TEMPLATES, base_name)
+                img_url = f"/static/mockup-templates/{img_filename}" if img_filename else None
+                is_silhouette = False
             
             # Categorize
             category = "General"
@@ -281,13 +325,17 @@ def get_available_garments():
             garments_dict[category][garment_name_for_api] = {
                 "name": garment_name_for_api,  # EXACT base_name with underscores for backend
                 "displayName": garment_name_display,  # Formatted for display
-                "imageUrl": img_url
+                "imageUrl": img_url,
+                "isSilhouette": is_silhouette  # Indicates if this is a true silhouette or needs filtering
             }
         
         categorized = {cat: sorted(vals.values(), key=lambda x: x['name']) for cat, vals in garments_dict.items()}
+        total_garments = sum(len(v) for v in categorized.values())
+        logger.info(f"      Returning {total_garments} garments across {len(categorized)} categories")
         return jsonify(categorized)
         
     except Exception as e:
+        logger.error(f"Error fetching garments: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -297,7 +345,12 @@ def generate_on_demand():
         data = request.json
         fabric_ref = data.get('fabric_ref')
         mockup_name = data.get('mockup_name') 
-        if not fabric_ref or not mockup_name: return jsonify({"success": False, "error": "Missing data"}), 400
+        
+        logger.info(f"      Generating mockup for fabric: {fabric_ref}, garment: {mockup_name}")
+        
+        if not fabric_ref or not mockup_name: 
+            logger.warning("      Missing fabric_ref or mockup_name")
+            return jsonify({"success": False, "error": "Missing data"}), 400
         
         generator = MockupGeneratorV2(
             fabric_dir=FABRIC_SWATCH_DIR, 
@@ -316,10 +369,13 @@ def generate_on_demand():
                 if '_face' in filename: mockups['face'] = url; views.append('face')
                 elif '_back' in filename: mockups['back'] = url; views.append('back')
                 else: mockups['single'] = url; views.append('single')
+            logger.info(f"      Mockup generated successfully: {views}")
             return jsonify({ "success": True, "views": views, "mockups": mockups })
         else:
+            logger.error("      Mockup generation failed - no result paths")
             return jsonify({"success": False, "error": "Mockup generation failed."}), 500
     except Exception as e:
+        logger.error(f"      Mockup generation error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -453,6 +509,9 @@ def serve_mockup(filename): return send_from_directory(MOCKUP_DIR_OUTPUT, filena
 
 @app.route('/static/mockup-templates/<filename>')
 def serve_mockup_template(filename): return send_from_directory(MOCKUP_DIR_TEMPLATES, filename)
+
+@app.route('/static/silhouettes/<filename>')
+def serve_silhouette(filename): return send_from_directory(SILHOUETTE_DIR, filename)
 
 @app.route('/static/swatches/<filename>')
 def serve_swatch(filename): return send_from_directory(FABRIC_SWATCH_DIR, filename)

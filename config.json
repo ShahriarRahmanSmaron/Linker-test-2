@@ -1,0 +1,14 @@
+{
+  "paths": {
+    "fabric_dir": "fabric_swatches",
+    "mockup_dir": "mockups",
+    "mask_dir": "masks",
+    "mockup_output_dir": "generated_mockups",
+    "pdf_output_dir": "generated_techpacks"
+  },
+  "settings": {
+    "default_fabric_resolution": [2000, 2000],
+    "output_format": "PNG",
+    "output_quality": 95
+  }
+}
