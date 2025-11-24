@@ -84,13 +84,13 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
 
       {/* Details Body */}
       <div className="p-4 flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-base font-bold text-neutral-900 truncate w-full group-hover:text-primary-600 transition-colors duration-200" title={fabricName}>{fabricName}</h3>
-        </div>
-        
-        <div className="text-sm text-neutral-500 flex items-center flex-wrap gap-2">
-          <span className="font-semibold text-neutral-700 bg-neutral-100 px-2 py-1 rounded">{fabric.fabrication || fabric.group_name}</span> 
-          <span>{fabricGsm} GSM</span>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium text-neutral-900 leading-relaxed" style={{ fontFamily: 'inherit' }}>
+            {fabric.fabrication || fabric.group_name}
+          </p>
+          {fabric.style && fabric.style !== 'N/A' && (
+            <span className="text-xs text-neutral-500">{fabric.style}</span>
+          )}
         </div>
       </div>
     </div>

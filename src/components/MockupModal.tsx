@@ -212,7 +212,14 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
             {/* Top Header with Title */}
             <div className="flex items-start justify-between px-6 pt-4 pb-3">
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-0.5">Fabrication :</h2>
+                <div className="flex items-baseline gap-2 mb-0.5">
+                  <h2 className="text-xl font-bold text-[#111827]">Fabrication :</h2>
+                  {fabricComposition && (
+                    <span className="text-sm font-medium text-[#111827]/80" style={{ fontFamily: 'inherit' }}>
+                      {fabricComposition}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-[#111827]/70">(Select garment, visualize and save)</p>
               </div>
               
