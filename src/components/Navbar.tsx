@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Layers } from 'lucide-react';
+import { Menu, X, Layers, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
+import { Switch } from './ui/switch';
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -44,18 +47,18 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <div className={`backdrop-blur-sm p-1.5 rounded-lg mr-2 transition-colors ${
               isScrolled 
-                ? 'bg-primary-50/80 group-hover:bg-primary-100' 
-                : 'bg-white/10 group-hover:bg-white/20'
+                ? 'bg-primary-50/80 dark:bg-primary-50/80 group-hover:bg-primary-100 dark:group-hover:bg-primary-100' 
+                : 'bg-primary-50/80 dark:bg-white/10 group-hover:bg-primary-100 dark:group-hover:bg-white/20'
             }`}>
                 <Layers className={`h-6 w-6 transition-colors ${
-                  isScrolled ? 'text-primary-600' : 'text-white'
+                  isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-white'
                 }`} />
             </div>
             <span className={`text-xl font-extrabold tracking-tight transition-colors ${
-              isScrolled ? 'text-neutral-900' : 'text-white'
+              isScrolled ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
             }`}>
-              <span className={isScrolled ? 'text-primary-600' : 'text-primary-300'}>Link</span>
-              <span className={isScrolled ? 'text-accent-500' : 'text-accent-400'}>ER</span>
+              <span className={isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-primary-300'}>Link</span>
+              <span className={isScrolled ? 'text-accent-500' : 'text-accent-500 dark:text-accent-400'}>ER</span>
             </span>
           </div>
 
@@ -67,8 +70,8 @@ export const Navbar: React.FC = () => {
                 onClick={() => handleNavClick(link.id)}
                 className={`text-sm font-medium transition-colors duration-200 ${
                   isScrolled 
-                    ? 'text-neutral-600 hover:text-primary-600' 
-                    : 'text-white hover:text-primary-300'
+                    ? 'text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400' 
+                    : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
                 }`}
               >
                 {link.label}
@@ -76,8 +79,13 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
+          {/* Theme Toggle & CTA Button */}
+          <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Sun size={18} className={theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'} />
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+              <Moon size={18} className={theme === 'dark' ? 'text-neutral-300' : 'text-neutral-400'} />
+            </div>
             <button
               onClick={() => navigate('/login?role=buyer')}
               className="bg-primary-500 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95"
@@ -90,8 +98,8 @@ export const Navbar: React.FC = () => {
           <div className="md:hidden">
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`transition-colors ${
               isScrolled 
-                ? 'text-neutral-500 hover:text-primary-600' 
-                : 'text-white hover:text-primary-300'
+                ? 'text-neutral-500 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400' 
+                : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
             }`}>
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -101,18 +109,26 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-neutral-200 absolute w-full shadow-xl">
+        <div className="md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-t border-neutral-200 dark:border-neutral-800 absolute w-full shadow-xl">
           <div className="px-4 pt-2 pb-6 space-y-1">
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className="block w-full text-left px-3 py-3 text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-colors"
+                className="block w-full text-left px-3 py-3 text-base font-medium text-neutral-600 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg transition-colors"
               >
                 {link.label}
               </button>
             ))}
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
+              <div className="flex items-center justify-between px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Sun size={18} className={theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'} />
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Theme</span>
+                  <Moon size={18} className={theme === 'dark' ? 'text-neutral-300' : 'text-neutral-400'} />
+                </div>
+                <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+              </div>
               <button
                 onClick={() => navigate('/login?role=buyer')}
                 className="w-full bg-primary-500 text-white px-4 py-3 rounded-lg text-base font-bold hover:bg-primary-600 transition-colors shadow-md"

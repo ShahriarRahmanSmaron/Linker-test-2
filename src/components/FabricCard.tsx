@@ -17,7 +17,7 @@ export const FabricCard: React.FC<FabricCardProps> = ({ fabric }) => {
   };
 
   return (
-    <div className="group relative bg-white rounded-xl shadow-sm border border-neutral-200 transition-all duration-300 ease-out flex flex-col h-full hover:shadow-xl hover:-translate-y-1 hover:border-primary-200">
+    <div className="group relative bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 transition-all duration-300 ease-out flex flex-col h-full hover:shadow-xl hover:-translate-y-1 hover:border-primary-200 dark:hover:border-primary-700">
       
       {/* Visual Swatch Area - Height set to 200px */}
       <div className="relative h-[200px] bg-neutral-100 overflow-hidden rounded-t-xl cursor-pointer group/swatch" onClick={handleAction}>
@@ -54,11 +54,11 @@ export const FabricCard: React.FC<FabricCardProps> = ({ fabric }) => {
       {/* Details Body */}
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-base font-bold text-neutral-900 truncate w-full group-hover:text-primary-600 transition-colors duration-200" title={fabric.name}>{fabric.name}</h3>
+          <h3 className="text-base font-bold text-neutral-900 dark:text-white truncate w-full group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200" title={fabric.name}>{fabric.name}</h3>
         </div>
         
-        <div className="text-sm text-neutral-500 flex items-center">
-          <span className="font-semibold text-neutral-700 bg-neutral-100 px-2 py-1 rounded mr-2">{fabric.fabrication}</span> 
+        <div className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center flex-wrap gap-2">
+          <span className="font-semibold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 px-2 py-1 rounded">{fabric.fabrication}</span> 
           <span>{fabric.gsm} GSM</span>
         </div>
       </div>

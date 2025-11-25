@@ -19,10 +19,11 @@ import { LoginPage } from './components/LoginPage';
 import { AuthProvider } from './components/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col font-sans selection:bg-primary-100 selection:text-primary-900">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-primary-100 dark:selection:bg-primary-900 selection:text-primary-900 dark:selection:text-primary-100 bg-white dark:bg-neutral-900 transition-colors">
       <Navbar />
       <main className="flex-grow">
         <HeroSection />
@@ -72,10 +73,12 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <AuthProvider>
-        <AppRoutes />
-        <Toaster />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 };
