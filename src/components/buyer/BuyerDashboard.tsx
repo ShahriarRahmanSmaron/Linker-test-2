@@ -35,7 +35,7 @@ import { SearchFabricCard } from '../SearchFabricCard';
 import { SelectionPanel } from '../SelectionPanel';
 import { MockupModal } from '../MockupModal';
 import { TechpackModal } from '../TechpackModal';
-import { Fabric, FabricFilter } from '../types';
+import { Fabric, FabricFilter } from '../../types';
 
 type DashboardView = 'dashboard' | 'fabric-library' | 'rfqs' | 'samples' | 'workspace' | 'support';
 
