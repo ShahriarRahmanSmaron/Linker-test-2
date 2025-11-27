@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export type UserRole = 'buyer' | 'manufacturer' | null;
+export type UserRole = 'buyer' | 'manufacturer' | 'admin' | null;
 
 interface User {
   role: UserRole;
@@ -24,13 +24,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (role: UserRole, email: string) => {
     // Simulate user data based on role
+    let name = '';
+    if (role === 'buyer') name = 'Emma Lewis';
+    else if (role === 'manufacturer') name = 'Masco Knits Ltd.';
+    else if (role === 'admin') name = 'System Admin';
+
     const userData: User = {
       role,
       email,
-      name: role === 'buyer' ? 'Emma Lewis' : 'Masco Knits Ltd.'
+      name
     };
     setUser(userData);
-    
+
     // Persist to local storage (optional for demo)
     localStorage.setItem('linker_user', JSON.stringify(userData));
   };

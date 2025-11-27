@@ -19,6 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     // If user is logged in but wrong role, redirect to their appropriate dashboard or home
     if (user?.role === 'buyer') return <Navigate to="/search" replace />;
     if (user?.role === 'manufacturer') return <Navigate to="/manufacturer-dashboard" replace />;
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
     return <Navigate to="/" replace />;
   }
 
