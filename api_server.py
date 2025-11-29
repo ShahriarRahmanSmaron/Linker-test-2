@@ -125,6 +125,19 @@ def apply_mask_to_swatch(swatch_path, mask_path):
     except Exception:
         return None
 
+# ===== AUTHENTICATION DECORATORS =====
+def admin_required():
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if claims.get('role') != 'admin':
+                return jsonify({"msg": "Admins only!"}), 403
+            return fn(*args, **kwargs)
+        return decorator
+    return wrapper
+
 class MockupGeneratorV2:
     def __init__(self, fabric_dir, mockup_dir, mask_dir, output_dir):
         self.fabric_dir = fabric_dir
@@ -132,8 +145,104 @@ class MockupGeneratorV2:
         self.mask_dir = mask_dir
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
-    def generate_mockup(self, fabric_ref, mockup_name):
-        return [] # Dummy implementation
+
+    def find_file(self, directory, ref_code, extensions=['.png', '.jpg', '.jpeg']):
+        for ext in extensions:
+            file_path = os.path.join(directory, f"{ref_code}{ext}")
+            if os.path.exists(file_path): return file_path
+            file_path_upper = os.path.join(directory, f"{ref_code}{ext.upper()}")
+            if os.path.exists(file_path_upper): return file_path_upper
+        
+        try:
+            ref_code_lower = ref_code.lower()
+            files_in_dir = os.listdir(directory)
+            for filename in files_in_dir:
+                name_without_ext = os.path.splitext(filename)[0]
+                if name_without_ext.lower() == ref_code_lower:
+                    return os.path.join(directory, filename)
+        except Exception:
+            pass
+        return None
+
+    def extract_mask_bounds(self, mask_image):
+        if mask_image.mode != 'L': mask_image = mask_image.convert('L')
+        binary_mask = mask_image.point(lambda p: 255 if p > 200 else 0, '1')
+        bbox = binary_mask.getbbox()
+        if bbox is None: raise ValueError("Mask is completely empty")
+        return bbox
+
+    def create_alpha_mask_from_white(self, mask_image):
+        return mask_image.convert('L')
+
+    def apply_fabric_to_mockup(self, fabric_path, mockup_path, mask_path, output_path):
+        try:
+            fabric_img = PILImage.open(fabric_path).convert('RGBA')
+            mockup_img = PILImage.open(mockup_path).convert('RGBA')
+            mask_img = PILImage.open(mask_path).convert('RGB')
+            
+            mask_x, mask_y, mask_x2, mask_y2 = self.extract_mask_bounds(mask_img)
+            mask_width = mask_x2 - mask_x
+            mask_height = mask_y2 - mask_y
+            
+            fabric_stretched = fabric_img.resize((mask_width, mask_height), PILImage.Resampling.LANCZOS)
+            alpha_mask = self.create_alpha_mask_from_white(mask_img)
+            if alpha_mask.size != mockup_img.size:
+                alpha_mask = alpha_mask.resize(mockup_img.size, PILImage.Resampling.LANCZOS)
+            
+            final_canvas = mockup_img.copy()
+            fabric_layer = PILImage.new('RGBA', mockup_img.size, (255, 255, 255, 0))
+            fabric_layer.paste(fabric_stretched, (mask_x, mask_y))
+            fabric_layer.putalpha(alpha_mask)
+            
+            final_canvas = PILImage.alpha_composite(final_canvas, fabric_layer)
+            final_canvas.save(output_path, 'PNG', quality=95)
+            return True
+        except Exception as e:
+            logger.error(f"Error applying fabric: {e}")
+            return False
+
+    def generate_mockup(self, fabric_ref, base_mockup_name):
+        fabric_path = self.find_file(self.fabric_dir, fabric_ref)
+        if not fabric_path: return None
+        
+        generated_files = []
+        variants = ["face", "back"]
+        variants_found = False
+        
+        for variant in variants:
+            mockup_name_variant = f"{base_mockup_name}_{variant}"
+            mask_ref_variant = f"{base_mockup_name}_mask_{variant}"
+            
+            mockup_path = self.find_file(self.mockup_dir, mockup_name_variant)
+            mask_path = self.find_file(self.mask_dir, mask_ref_variant)
+            
+            if mockup_path and mask_path:
+                variants_found = True
+                output_filename = f"Mockup_{mockup_name_variant}_{fabric_ref}.png"
+                output_path = os.path.join(self.output_dir, output_filename)
+                
+                if self.apply_fabric_to_mockup(fabric_path, mockup_path, mask_path, output_path):
+                    generated_files.append({
+                        "view": variant,
+                        "url": f"/static/mockups/{output_filename}"
+                    })
+
+        if not variants_found:
+            mask_ref = f"{base_mockup_name}_mask"
+            mockup_path = self.find_file(self.mockup_dir, base_mockup_name)
+            mask_path = self.find_file(self.mask_dir, mask_ref)
+            
+            if mockup_path and mask_path:
+                output_filename = f"Mockup_{base_mockup_name}_{fabric_ref}.png"
+                output_path = os.path.join(self.output_dir, output_filename)
+                
+                if self.apply_fabric_to_mockup(fabric_path, mockup_path, mask_path, output_path):
+                    generated_files.append({
+                        "view": "single",
+                        "url": f"/static/mockups/{output_filename}"
+                    })
+        
+        return generated_files
 
 # ===== API ROUTES =====
 
@@ -193,6 +302,10 @@ def find_fabrics():
             owner = User.query.get(f.manufacturer_id)
             owner_name = owner.company_name if owner else "Unknown"
             
+            # Find image
+            image_filename = find_file(FABRIC_SWATCH_DIR, f.ref)
+            swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
+            
             results.append({
                 "id": f.id,
                 "ref": f.ref,
@@ -204,7 +317,8 @@ def find_fabrics():
                 "status": f.status,
                 "owner_name": owner_name,
                 "manufacturer_id": f.manufacturer_id,
-                "meta_data": f.meta_data or {}
+                "meta_data": f.meta_data or {},
+                "swatchUrl": swatch_url
             })
             
         return jsonify({
@@ -219,9 +333,117 @@ def find_fabrics():
         logger.error(f"Error finding fabrics: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/garments')
+def get_garments():
+    try:
+        garments_by_category = {}
+        
+        if not os.path.exists(MOCKUP_DIR_TEMPLATES):
+            return jsonify({})
+            
+        files = os.listdir(MOCKUP_DIR_TEMPLATES)
+        garment_map = {} # Key: (category, base_name) -> data
+
+        for filename in files:
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                # Remove extension
+                name_part = os.path.splitext(filename)[0]
+                
+                # Check for view suffix
+                view = None
+                base_name = name_part
+                if '_face' in name_part.lower():
+                    base_name = re.sub(r'_face', '', name_part, flags=re.IGNORECASE)
+                    view = 'face'
+                elif '_back' in name_part.lower():
+                    base_name = re.sub(r'_back', '', name_part, flags=re.IGNORECASE)
+                    view = 'back'
+                
+                # Split category (first word)
+                parts = base_name.split(' ', 1)
+                if len(parts) > 1:
+                    category = parts[0].capitalize() # Men, Ladies, Infant
+                    display_name = parts[1].strip()
+                else:
+                    category = "Uncategorized"
+                    display_name = base_name
+                
+                # Key for uniqueness
+                key = (category, display_name)
+                
+                if key not in garment_map:
+                    garment_map[key] = {
+                        "name": base_name, 
+                        "displayName": display_name,
+                        "category": category,
+                        "imageUrl": None,
+                        "hasFace": False
+                    }
+                
+                # Determine best image for thumbnail
+                if view == 'face' or not garment_map[key]["imageUrl"]:
+                     garment_map[key]["imageUrl"] = f"/static/mockup-templates/{filename}"
+                     if view == 'face':
+                         garment_map[key]["hasFace"] = True
+                elif view == 'back' and not garment_map[key]["hasFace"]:
+                     garment_map[key]["imageUrl"] = f"/static/mockup-templates/{filename}"
+
+        # Convert map to response structure
+        for key, data in garment_map.items():
+            cat = data["category"]
+            if cat not in garments_by_category:
+                garments_by_category[cat] = []
+                
+            garments_by_category[cat].append({
+                "name": data["name"],
+                "displayName": data["displayName"],
+                "imageUrl": data["imageUrl"],
+                "isSilhouette": True
+            })
+            
+        return jsonify(garments_by_category)
+
+    except Exception as e:
+        logger.error(f"Error fetching garments: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/generate-mockup', methods=['POST'])
 def generate_on_demand():
-    return jsonify({"success": False, "error": "Not implemented"}), 501
+    try:
+        data = request.json
+        fabric_ref = data.get('fabric_ref')
+        mockup_name = data.get('mockup_name')
+        
+        if not fabric_ref or not mockup_name:
+            return jsonify({"success": False, "error": "Missing fabric_ref or mockup_name"}), 400
+            
+        generator = MockupGeneratorV2(
+            fabric_dir=FABRIC_SWATCH_DIR,
+            mockup_dir=MOCKUP_DIR_TEMPLATES,
+            mask_dir=MASK_DIR,
+            output_dir=MOCKUP_DIR_OUTPUT
+        )
+        
+        results = generator.generate_mockup(fabric_ref, mockup_name)
+        
+        if results:
+            mockups = {}
+            views = []
+            for res in results:
+                mockups[res["view"]] = res["url"]
+                views.append(res["view"])
+                
+            return jsonify({
+                "success": True,
+                "mockups": mockups,
+                "views": views
+            })
+        else:
+            return jsonify({"success": False, "error": "Failed to generate mockup. Check if files exist."}), 404
+            
+    except Exception as e:
+        logger.error(f"Error generating mockup: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/generate-pptx', methods=['POST'])
 def generate_pptx():
@@ -254,12 +476,12 @@ def serve_js(): return send_from_directory(PROJECT_ROOT, 'app.js')
 
 @app.route('/styles.css')
 def serve_css(): return send_from_directory(PROJECT_ROOT, 'styles.css')
-
 @app.route('/script.js')
 def serve_script(): return send_from_directory(PROJECT_ROOT, 'script.js')
 
 # ===== ADMIN ROUTES =====
 @app.route('/api/admin/fabrics', methods=['GET'])
+@admin_required()
 def get_admin_fabrics():
     try:
         status_filter = request.args.get('status')
@@ -275,12 +497,18 @@ def get_admin_fabrics():
         for f in fabrics:
             owner = User.query.get(f.manufacturer_id)
             owner_name = owner.company_name if owner else "Unknown"
+            
+            # Find image
+            image_filename = find_file(FABRIC_SWATCH_DIR, f.ref)
+            swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
+            
             results.append({
                 "id": f.id, "ref": f.ref, "fabric_group": f.fabric_group,
                 "fabrication": f.fabrication, "gsm": f.gsm, "width": f.width,
                 "composition": f.composition, "status": f.status,
                 "owner_name": owner_name, "manufacturer_id": f.manufacturer_id,
-                "meta_data": f.meta_data or {}
+                "meta_data": f.meta_data or {},
+                "swatchUrl": swatch_url
             })
         return jsonify(results)
     except Exception as e:
@@ -288,15 +516,21 @@ def get_admin_fabrics():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/fabric/<int:fabric_id>', methods=['GET', 'PUT', 'DELETE'])
+@admin_required()
 def manage_fabric(fabric_id):
     try:
         fabric = Fabric.query.get_or_404(fabric_id)
         if request.method == 'GET':
+            # Find image
+            image_filename = find_file(FABRIC_SWATCH_DIR, fabric.ref)
+            swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
+
             return jsonify({
                 "id": fabric.id, "ref": fabric.ref, "fabric_group": fabric.fabric_group,
                 "fabrication": fabric.fabrication, "gsm": fabric.gsm, "width": fabric.width,
                 "composition": fabric.composition, "status": fabric.status,
-                "manufacturer_id": fabric.manufacturer_id, "meta_data": fabric.meta_data or {}
+                "manufacturer_id": fabric.manufacturer_id, "meta_data": fabric.meta_data or {},
+                "swatchUrl": swatch_url
             })
         elif request.method == 'PUT':
             data = request.json
@@ -317,6 +551,7 @@ def manage_fabric(fabric_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/mills', methods=['GET'])
+@admin_required()
 def get_mills():
     try:
         mills = User.query.filter_by(role='manufacturer').all()
@@ -326,18 +561,6 @@ def get_mills():
         return jsonify({"error": str(e)}), 500
 
 # ===== AUTHENTICATION =====
-def admin_required():
-    def wrapper(fn):
-        @wraps(fn)
-        def decorator(*args, **kwargs):
-            verify_jwt_in_request()
-            claims = get_jwt()
-            if claims.get('role') != 'admin':
-                return jsonify({"msg": "Admins only!"}), 403
-            return fn(*args, **kwargs)
-        return decorator
-    return wrapper
-
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
     data = request.json
