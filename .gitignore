@@ -44,3 +44,10 @@ __pycache__/
 instance/*
 *.db
 *.sqlite3
+
+# Scripts
+setup_git.ps1
+
+# Migrations cache
+migrations/__pycache__/
+migrations/versions/__pycache__/
