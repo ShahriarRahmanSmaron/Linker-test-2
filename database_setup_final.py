@@ -19,27 +19,21 @@ DATA_FILE_PATH = os.path.join(BASE_DIR, 'Excel_files', 'fabric_database.xlsx')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+from models import db, User, Fabric
+db.init_app(app)
+
+def find_file(directory, base_filename, extensions=['.jpg', '.png', '.jpeg', '.webp']):
+    for ext in extensions:
+        for case_ext in [ext, ext.upper(), ext.lower()]:
+            path = os.path.join(directory, f"{base_filename}{case_ext}")
+            if os.path.exists(path): return f"{base_filename}{case_ext}"
+    return None
 
 # Models
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(20), default='buyer')
-    company_name = db.Column(db.String(100))
 
-class Fabric(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ref = db.Column(db.String(50))
-    fabric_group = db.Column(db.String(100))
-    fabrication = db.Column(db.String(200))
-    gsm = db.Column(db.String(50))
-    width = db.Column(db.String(50))
-    composition = db.Column(db.String(200))
-    status = db.Column(db.String(20), default='LIVE')
-    manufacturer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    meta_data = db.Column(db.JSON)
 
 def setup_database():
     print("Starting database setup...")
@@ -56,7 +50,9 @@ def setup_database():
 
         # Create Admin User from .env
         admin_email = os.getenv('ADMIN_EMAIL', 'admin@linker.app')
-        admin_pass = os.getenv('ADMIN_PASSWORD', 'StrongAdminPass!23')
+        admin_pass = os.getenv('ADMIN_PASSWORD')
+        if not admin_pass:
+            raise ValueError("ADMIN_PASSWORD environment variable is required to setup the database.")
         
         admin_user = User.query.filter_by(email=admin_email).first()
         if not admin_user:
@@ -78,10 +74,15 @@ def setup_database():
         masco_user = User.query.filter_by(email=masco_email).first()
         
         if not masco_user:
+            # Security: Require password from environment variable
+            masco_pass = os.getenv('MASCO_PASSWORD')
+            if not masco_pass:
+                raise ValueError("MASCO_PASSWORD environment variable is required to setup the database.")
+            
             print(f"Creating user {masco_email}...")
             masco_user = User(
                 email=masco_email,
-                password_hash=generate_password_hash('password123'), # Default password
+                password_hash=generate_password_hash(masco_pass),
                 role='manufacturer',
                 company_name='Masco'
             )
@@ -131,6 +132,9 @@ def setup_database():
                         if pd.notna(val):
                             meta_data[col] = str(val)
 
+                    # Find image path
+                    image_filename = find_file(os.path.join(BASE_DIR, 'fabric_swatches'), ref_val)
+                    
                     new_fabric = Fabric(
                         ref=ref_val,
                         fabric_group=fabric_group if pd.notna(fabric_group) else None,
@@ -140,7 +144,8 @@ def setup_database():
                         composition=composition if pd.notna(composition) else None,
                         status='LIVE',
                         manufacturer_id=masco_user.id,
-                        meta_data=meta_data
+                        meta_data=meta_data,
+                        image_path=image_filename
                     )
                     db.session.add(new_fabric)
                     count += 1

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"  # Ignore extra env vars not defined here
+        extra="forbid"  # Security: Forbid extra env vars to catch typos
     )
     
     # ===== API Keys =====
@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     FLASK_HOST: str = Field(default="0.0.0.0", description="Flask server host")
     FLASK_PORT: int = Field(default=5000, ge=1, le=65535, description="Flask server port")
     FLASK_DEBUG: bool = Field(default=True, description="Flask debug mode")
+
+    # ===== Security Settings =====
+    SECRET_KEY: str = Field(..., description="Secret key for Flask session and JWT")
+    ADMIN_EMAIL: str = Field(default="admin@linker.app", description="Admin email address")
+    ADMIN_PASSWORD: str = Field(..., description="Admin password")
+    MASCO_PASSWORD: str = Field(..., description="Masco manufacturer user password")
+    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001", description="Comma-separated list of allowed CORS origins")
     
     @field_validator("OUTPUT_FORMAT")
     @classmethod

@@ -12,6 +12,8 @@ flask>=2.3.0
 flask-cors>=4.0.0
 flask-sqlalchemy
 flask-jwt-extended
+flask-migrate
+flask-limiter
 werkzeug
 psycopg2-binary
 

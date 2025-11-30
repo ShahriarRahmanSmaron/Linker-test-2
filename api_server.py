@@ -16,6 +16,9 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
+from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import pandas as pd
 from PIL import Image as PILImage
 from pptx import Presentation
@@ -25,6 +28,8 @@ from pptx.enum.text import MSO_ANCHOR
 
 # ===== CONFIGURATION =====
 from config import settings
+from models import db, User, Fabric
+from mockup_library import MockupGeneratorV2
 
 # Use settings from environment variables
 PROJECT_ROOT = str(settings.project_root_path)
@@ -40,25 +45,34 @@ DATABASE_PATH = str(settings.database_path)
 TITLE_SLIDE_1_PATH = str(settings.title_slide_1_path)
 TITLE_SLIDE_2_PATH = str(settings.title_slide_2_path)
 
+# Initialize Flask App
 app = Flask(__name__)
 
 # Security: Restrict CORS to frontend origins
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000", "http://localhost:3001"]}}, supports_credentials=True)
+cors_origins = settings.CORS_ALLOWED_ORIGINS.split(',')
+CORS(app, resources={r"/*": {"origins": cors_origins}}, supports_credentials=True)
 
 # Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(PROJECT_ROOT, 'instance', 'fabric_sourcing.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # Security: JWT Secret Key
-app.config['JWT_SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = settings.SECRET_KEY
 if not app.config['JWT_SECRET_KEY']:
-    logger = logging.getLogger(__name__)
-    logger.warning("WARNING: SECRET_KEY not set in environment. Using a random key. Sessions will be invalidated on restart.")
-    app.config['JWT_SECRET_KEY'] = os.urandom(24).hex()
+    raise ValueError("No SECRET_KEY set for Flask application. Please set it in .env file.")
 
-from models import db, User, Fabric
-
+# Initialize Extensions
 db.init_app(app)
+migrate = Migrate(app, db) # Architecture: Enable database migrations
 jwt = JWTManager(app)
+
+# Security: Rate Limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 # Configure logging
 logging.basicConfig(
@@ -80,178 +94,64 @@ def log_response_info(response):
     return response
 
 # ===== HELPER FUNCTIONS =====
-def clean_group_name(text):
-    if not isinstance(text, str): return str(text)
-    text = re.sub(r'\(.*?\)', '', text)
-    if '.' in text:
-        parts = text.split('.', 1)
-        if len(parts) > 1: text = parts[1]
-    return text.strip()
-
 def find_file(directory, base_filename, extensions=['.jpg', '.png', '.jpeg', '.webp']):
+    # Security: Prevent path traversal while preserving special characters in filenames
+    # Use os.path.basename to ensure we only get the filename part (no directory separators)
+    base_filename = os.path.basename(str(base_filename))
+    # Additional check: reject any remaining path traversal attempts
+    if '..' in base_filename or '/' in base_filename or '\\' in base_filename:
+        return None
+    
     for ext in extensions:
         for case_ext in [ext, ext.upper(), ext.lower()]:
             path = os.path.join(directory, f"{base_filename}{case_ext}")
             if os.path.exists(path): return f"{base_filename}{case_ext}"
     return None
 
-def apply_mask_to_swatch(swatch_path, mask_path):
-    try:
-        swatch = PILImage.open(swatch_path).convert('RGBA')
-        mask_l = mask.convert('L')
-        binary_mask = mask_l.point(lambda p: 255 if p > 200 else 0, '1')
-        bbox = binary_mask.getbbox()
-        if bbox is None: return None
-        x1, y1, x2, y2 = bbox
-        swatch_resized = swatch.resize((x2 - x1, y2 - y1), PILImage.Resampling.LANCZOS)
-        output = PILImage.new('RGBA', mask.size, (0, 0, 0, 0))
-        output.paste(swatch_resized, (x1, y1))
-        output.putalpha(mask_l)
-        return output
-    except Exception:
-        return None
+def clean_group_name(text):
+    if not isinstance(text, str): return str(text)
+    return text.strip()
 
-# ===== AUTHENTICATION DECORATORS =====
+# ===== ADMIN DECORATOR =====
 def admin_required():
     def wrapper(fn):
         @wraps(fn)
+        @jwt_required()
         def decorator(*args, **kwargs):
-            verify_jwt_in_request()
             claims = get_jwt()
-            if claims.get('role') != 'admin':
+            if claims.get("role") != "admin":
                 return jsonify({"msg": "Admins only!"}), 403
             return fn(*args, **kwargs)
         return decorator
     return wrapper
 
-class MockupGeneratorV2:
-    def __init__(self, fabric_dir, mockup_dir, mask_dir, output_dir):
-        self.fabric_dir = fabric_dir
-        self.mask_dir = mask_dir
-        self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
-
-    def find_file(self, directory, ref_code, extensions=['.png', '.jpg', '.jpeg']):
-        for ext in extensions:
-            file_path = os.path.join(directory, f"{ref_code}{ext}")
-            if os.path.exists(file_path): return file_path
-            file_path_upper = os.path.join(directory, f"{ref_code}{ext.upper()}")
-            if os.path.exists(file_path_upper): return file_path_upper
-        
-        try:
-            ref_code_lower = ref_code.lower()
-            files_in_dir = os.listdir(directory)
-            for filename in files_in_dir:
-                name_without_ext = os.path.splitext(filename)[0]
-                if name_without_ext.lower() == ref_code_lower:
-                    return os.path.join(directory, filename)
-        except Exception:
-            pass
-        return None
-
-    def extract_mask_bounds(self, mask_image):
-        if mask_image.mode != 'L': mask_image = mask_image.convert('L')
-        binary_mask = mask_image.point(lambda p: 255 if p > 200 else 0, '1')
-        bbox = binary_mask.getbbox()
-        if bbox is None: raise ValueError("Mask is completely empty")
-        return bbox
-
-    def create_alpha_mask_from_white(self, mask_image):
-        return mask_image.convert('L')
-
-    def apply_fabric_to_mockup(self, fabric_path, mockup_path, mask_path, output_path):
-        try:
-            fabric_img = PILImage.open(fabric_path).convert('RGBA')
-            mockup_img = PILImage.open(mockup_path).convert('RGBA')
-            mask_img = PILImage.open(mask_path).convert('RGB')
-            
-            mask_x, mask_y, mask_x2, mask_y2 = self.extract_mask_bounds(mask_img)
-            mask_width = mask_x2 - mask_x
-            mask_height = mask_y2 - mask_y
-            
-            fabric_stretched = fabric_img.resize((mask_width, mask_height), PILImage.Resampling.LANCZOS)
-            alpha_mask = self.create_alpha_mask_from_white(mask_img)
-            if alpha_mask.size != mockup_img.size:
-                alpha_mask = alpha_mask.resize(mockup_img.size, PILImage.Resampling.LANCZOS)
-            
-            final_canvas = mockup_img.copy()
-            fabric_layer = PILImage.new('RGBA', mockup_img.size, (255, 255, 255, 0))
-            fabric_layer.paste(fabric_stretched, (mask_x, mask_y))
-            fabric_layer.putalpha(alpha_mask)
-            
-            final_canvas = PILImage.alpha_composite(final_canvas, fabric_layer)
-            final_canvas.save(output_path, 'PNG', quality=95)
-            return True
-        except Exception as e:
-            logger.error(f"Error applying fabric: {e}")
-            return False
-
-    def generate_mockup(self, fabric_ref, base_mockup_name):
-        fabric_path = self.find_file(self.fabric_dir, fabric_ref)
-        if not fabric_path: return None
-        
-        generated_files = []
-        variants = ["face", "back"]
-        variants_found = False
-        
-        for variant in variants:
-            mockup_name_variant = f"{base_mockup_name}_{variant}"
-            mask_ref_variant = f"{base_mockup_name}_mask_{variant}"
-            
-            mockup_path = self.find_file(self.mockup_dir, mockup_name_variant)
-            mask_path = self.find_file(self.mask_dir, mask_ref_variant)
-            
-            if mockup_path and mask_path:
-                variants_found = True
-                output_filename = f"Mockup_{mockup_name_variant}_{fabric_ref}.png"
-                output_path = os.path.join(self.output_dir, output_filename)
-                
-                if self.apply_fabric_to_mockup(fabric_path, mockup_path, mask_path, output_path):
-                    generated_files.append({
-                        "view": variant,
-                        "url": f"/static/mockups/{output_filename}"
-                    })
-
-        if not variants_found:
-            mask_ref = f"{base_mockup_name}_mask"
-            mockup_path = self.find_file(self.mockup_dir, base_mockup_name)
-            mask_path = self.find_file(self.mask_dir, mask_ref)
-            
-            if mockup_path and mask_path:
-                output_filename = f"Mockup_{base_mockup_name}_{fabric_ref}.png"
-                output_path = os.path.join(self.output_dir, output_filename)
-                
-                if self.apply_fabric_to_mockup(fabric_path, mockup_path, mask_path, output_path):
-                    generated_files.append({
-                        "view": "single",
-                        "url": f"/static/mockups/{output_filename}"
-                    })
-        
-        return generated_files
-
 # ===== API ROUTES =====
 
 @app.route('/api/fabric-groups')
+@limiter.limit("100 per minute")
 def get_fabric_groups():
     try:
-        # Use SQL query instead of pandas for performance and consistency
-        groups = db.session.query(Fabric.fabric_group).filter_by(status='LIVE').distinct().all()
+        # Architecture: Standardized on Model.query pattern for consistency
+        groups = Fabric.query.with_entities(Fabric.fabric_group).filter_by(status='LIVE').distinct().all()
         cleaned_groups = sorted(list(set([clean_group_name(g[0]) for g in groups if g[0]])))
         return jsonify(cleaned_groups)
     except Exception as e:
         logger.error(f"Error fetching groups: {e}")
-        return jsonify([])
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/api/find-fabrics')
+@limiter.limit("60 per minute")
 def find_fabrics():
     search_term = request.args.get('search', '').strip()
+    filter_group = request.args.get('group', '').strip()
+    filter_weight = request.args.get('weight', '').strip()
     page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 20))
     
-    # Filters
-    filter_group = request.args.get('group', '').lower().strip()
-    filter_weight = request.args.get('weight', '').lower().strip()
-
+    # Security: Enforce max limit to prevent DoS
+    MAX_LIMIT = 100
+    limit = int(request.args.get('limit', 20))
+    limit = min(limit, MAX_LIMIT)
+    
     logger.info(f"Search: '{search_term}' | Group: '{filter_group}' | Weight: '{filter_weight}'")
 
     try:
@@ -288,7 +188,8 @@ def find_fabrics():
             owner_name = owner.company_name if owner else "Unknown"
             
             # Find image
-            image_filename = find_file(FABRIC_SWATCH_DIR, f.ref)
+            # Optimization: Use stored image_path if available
+            image_filename = f.image_path if hasattr(f, 'image_path') and f.image_path else find_file(FABRIC_SWATCH_DIR, f.ref)
             swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
             
             results.append({
@@ -316,9 +217,10 @@ def find_fabrics():
 
     except Exception as e:
         logger.error(f"Error finding fabrics: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/api/garments')
+@limiter.limit("100 per minute")
 def get_garments():
     try:
         garments_by_category = {}
@@ -390,9 +292,11 @@ def get_garments():
 
     except Exception as e:
         logger.error(f"Error fetching garments: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/api/generate-mockup', methods=['POST'])
+@jwt_required()
+@limiter.limit("10 per minute")
 def generate_on_demand():
     try:
         data = request.json
@@ -401,6 +305,16 @@ def generate_on_demand():
         
         if not fabric_ref or not mockup_name:
             return jsonify({"success": False, "error": "Missing fabric_ref or mockup_name"}), 400
+        
+        # Security: Validate inputs (prevent path traversal while preserving special characters)
+        # Use os.path.basename to ensure we only get the filename part
+        fabric_ref = os.path.basename(str(fabric_ref))
+        mockup_name = os.path.basename(str(mockup_name))
+        # Reject path traversal attempts
+        if '..' in fabric_ref or '/' in fabric_ref or '\\' in fabric_ref:
+            return jsonify({"success": False, "error": "Invalid fabric_ref: path traversal detected"}), 400
+        if '..' in mockup_name or '/' in mockup_name or '\\' in mockup_name:
+            return jsonify({"success": False, "error": "Invalid mockup_name: path traversal detected"}), 400
             
         generator = MockupGeneratorV2(
             fabric_dir=FABRIC_SWATCH_DIR,
@@ -415,8 +329,13 @@ def generate_on_demand():
             mockups = {}
             views = []
             for res in results:
-                mockups[res["view"]] = res["url"]
-                views.append(res["view"])
+                filename = os.path.basename(res)
+                view = "single"
+                if "_face" in filename: view = "face"
+                elif "_back" in filename: view = "back"
+                
+                mockups[view] = f"/static/mockups/{filename}"
+                views.append(view)
                 
             return jsonify({
                 "success": True,
@@ -428,9 +347,10 @@ def generate_on_demand():
             
     except Exception as e:
         logger.error(f"Error generating mockup: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "An unexpected error occurred."}), 500
 
 @app.route('/api/generate-pptx', methods=['POST'])
+@limiter.limit("5 per minute")
 def generate_pptx():
     return jsonify({"success": False, "error": "Not implemented"}), 501
 
@@ -484,7 +404,7 @@ def get_admin_fabrics():
             owner_name = owner.company_name if owner else "Unknown"
             
             # Find image
-            image_filename = find_file(FABRIC_SWATCH_DIR, f.ref)
+            image_filename = f.image_path if hasattr(f, 'image_path') and f.image_path else find_file(FABRIC_SWATCH_DIR, f.ref)
             swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
             
             results.append({
@@ -498,7 +418,7 @@ def get_admin_fabrics():
         return jsonify(results)
     except Exception as e:
         logger.error(f"Error fetching admin fabrics: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/api/admin/fabric/<int:fabric_id>', methods=['GET', 'PUT', 'DELETE'])
 @admin_required()
@@ -507,7 +427,7 @@ def manage_fabric(fabric_id):
         fabric = Fabric.query.get_or_404(fabric_id)
         if request.method == 'GET':
             # Find image
-            image_filename = find_file(FABRIC_SWATCH_DIR, fabric.ref)
+            image_filename = fabric.image_path if hasattr(fabric, 'image_path') and fabric.image_path else find_file(FABRIC_SWATCH_DIR, fabric.ref)
             swatch_url = f"/static/swatches/{image_filename}" if image_filename else None
 
             return jsonify({
@@ -533,7 +453,7 @@ def manage_fabric(fabric_id):
     except Exception as e:
         logger.error(f"Error managing fabric {fabric_id}: {e}")
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @app.route('/api/admin/mills', methods=['GET'])
 @admin_required()
@@ -543,10 +463,11 @@ def get_mills():
         return jsonify([{"id": m.id, "name": m.company_name} for m in mills])
     except Exception as e:
         logger.error(f"Error fetching mills: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 # ===== AUTHENTICATION =====
 @app.route('/api/auth/signup', methods=['POST'])
+@limiter.limit("5 per minute")
 def signup():
     data = request.json
     email = data.get('email')
@@ -562,6 +483,7 @@ def signup():
     return jsonify({"message": "User created successfully", "user_id": new_user.id}), 201
 
 @app.route('/api/auth/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     data = request.json
     email = data.get('email')

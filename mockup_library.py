@@ -50,8 +50,13 @@ class MockupGeneratorV2:
         Returns:
             Full path to the file, or None if not found
         """
-        # Debugging
-        # print(f"DEBUG: Searching for '{ref_code}' in '{directory}'")
+        # Security: Prevent path traversal attacks
+        # Use os.path.basename to strip any directory components
+        ref_code = os.path.basename(str(ref_code))
+        # Reject any remaining path traversal attempts
+        if '..' in ref_code or '/' in ref_code or '\\' in ref_code:
+            print(f"  [!] Security: Rejected potential path traversal in ref_code: '{ref_code}'")
+            return None
 
         # First try exact match
         for ext in extensions:

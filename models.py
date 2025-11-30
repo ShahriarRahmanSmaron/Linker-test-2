@@ -20,3 +20,4 @@ class Fabric(db.Model):
     status = db.Column(db.String(20), default='pending')
     manufacturer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     meta_data = db.Column(db.JSON)
+    image_path = db.Column(db.String(255)) # Optimization: Store path to avoid N+1 lookups
