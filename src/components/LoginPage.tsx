@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layers, ArrowRight, Mail, Lock, User, Building2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { toast } from 'sonner';
 
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -44,6 +45,7 @@ export const LoginPage: React.FC = () => {
             }
         } catch (error) {
             console.error("Authentication failed", error);
+            toast.error('Server unreachable. Please check your connection.');
         } finally {
             setIsLoading(false);
         }

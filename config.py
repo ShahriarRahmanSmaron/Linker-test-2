@@ -73,7 +73,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = Field(default="admin@linker.app", description="Admin email address")
     ADMIN_PASSWORD: str = Field(..., description="Admin password")
     MASCO_PASSWORD: str = Field(default="masco123", description="Masco manufacturer user password")
-    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001", description="Comma-separated list of allowed CORS origins")
+    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,http://13.203.231.247", description="Comma-separated list of allowed CORS origins")
     
     @field_validator("OUTPUT_FORMAT")
     @classmethod
