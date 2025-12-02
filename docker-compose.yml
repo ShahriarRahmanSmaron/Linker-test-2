@@ -10,9 +10,12 @@ services:
     volumes:
       - ./instance:/app/instance
       - ./fabric_swatches:/app/fabric_swatches
-      - ./mockup_templates:/app/mockup_templates
+      - ./mockups:/app/mockups
+      - ./masks:/app/masks
+      - ./silhouettes:/app/silhouettes
+      - ./Excel_files:/app/Excel_files
       - ./generated_mockups:/app/generated_mockups
-      - ./databases:/app/databases
+      - ./generated_techpacks:/app/generated_techpacks
     ports:
       - "5000:5000"
 
