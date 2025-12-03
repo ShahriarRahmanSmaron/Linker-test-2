@@ -43,9 +43,12 @@ export const LoginPage: React.FC = () => {
                 await signup(email, password, role);
                 setIsLogin(true); // Switch to login mode after signup
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Authentication failed", error);
-            toast.error('Server unreachable. Please check your connection.');
+            // Only show generic error for network issues, as AuthContext handles specific API error messages
+            if (!error.message || error.message === 'Failed to fetch' || error.message.includes('Network request failed')) {
+                toast.error('Server unreachable. Please check your connection.');
+            }
         } finally {
             setIsLoading(false);
         }

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface FabricEditorProps {
@@ -38,7 +39,7 @@ export const FabricEditor: React.FC<FabricEditorProps> = ({ fabric, onClose, onS
         // Fetch mills
         const fetchMills = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/admin/mills');
+                const response = await api.get('/admin/mills');
                 if (response.ok) {
                     setMills(await response.json());
                 }
@@ -85,11 +86,7 @@ export const FabricEditor: React.FC<FabricEditorProps> = ({ fabric, onClose, onS
                 meta_data: metaObject,
             };
 
-            const response = await fetch(`http://localhost:5000/api/admin/fabric/${fabric.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            const response = await api.put(`/admin/fabric/${fabric.id}`, payload);
 
             if (response.ok) {
                 toast.success(publish ? 'Fabric published!' : 'Draft saved successfully');

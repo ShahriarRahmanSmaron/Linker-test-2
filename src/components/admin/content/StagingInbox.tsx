@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, X, Eye, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface StagingInboxProps {
@@ -17,7 +18,7 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
     const fetchFabrics = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/fabrics?status=PENDING_REVIEW');
+            const response = await api.get('/admin/fabrics?status=PENDING_REVIEW');
             if (response.ok) {
                 const data = await response.json();
                 setFabrics(data);
@@ -37,11 +38,7 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
 
     const handleQuickApprove = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/fabric/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'LIVE' }),
-            });
+            const response = await api.put(`/admin/fabric/${id}`, { status: 'LIVE' });
 
             if (response.ok) {
                 toast.success('Fabric approved and published!');
@@ -58,9 +55,7 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
         if (!confirm('Are you sure you want to reject (delete) this fabric?')) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/fabric/${id}`, {
-                method: 'DELETE',
-            });
+            const response = await api.delete(`/admin/fabric/${id}`);
 
             if (response.ok) {
                 toast.success('Fabric rejected and removed.');
