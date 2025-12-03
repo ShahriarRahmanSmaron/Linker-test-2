@@ -123,6 +123,18 @@ def reset_sequences(pg_cursor, table_name):
         print(f"    Note: Could not reset sequence for {table_name}: {e}")
 
 
+def ensure_schema_compatibility(pg_cursor):
+    """Ensure PostgreSQL schema is compatible with data."""
+    print("\n    Ensuring schema compatibility...")
+    try:
+        # Increase column lengths for fabric table
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "fabrication" TYPE VARCHAR(255);')
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "composition" TYPE VARCHAR(255);')
+        print("    Updated fabric table column lengths")
+    except Exception as e:
+        print(f"    Note: Could not update schema (might already be updated or table missing): {e}")
+
+
 def main():
     print("=" * 60)
     print("SQLite to PostgreSQL Migration")
@@ -150,6 +162,9 @@ def main():
         pg_conn.autocommit = False
         pg_cursor = pg_conn.cursor()
         print("    Connected successfully!")
+        
+        ensure_schema_compatibility(pg_cursor)
+        pg_conn.commit()
     except Exception as e:
         print(f"    ERROR: Could not connect to PostgreSQL: {e}")
         print("\n    Make sure:")
