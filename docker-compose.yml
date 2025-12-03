@@ -54,6 +54,12 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./dist:/srv
+      # Static files served directly by Caddy (bypasses Python)
+      - ./generated_mockups:/srv/static/mockups
+      - ./mockups:/srv/static/mockup-templates
+      - ./fabric_swatches:/srv/static/swatches
+      - ./silhouettes:/srv/static/silhouettes
+      - ./images:/srv/images
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

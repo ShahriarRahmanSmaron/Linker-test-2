@@ -1,19 +1,34 @@
 :80 {
     root * /srv
     encode gzip
-    file_server
 
+    # API routes -> proxy to Flask backend
     handle /api/* {
         reverse_proxy backend:5000
     }
 
-    handle /static/* {
-        reverse_proxy backend:5000
+    # Static files served directly by Caddy (faster, frees up Python workers)
+    handle /static/mockups/* {
+        file_server
+    }
+
+    handle /static/mockup-templates/* {
+        file_server
+    }
+
+    handle /static/swatches/* {
+        file_server
+    }
+
+    handle /static/silhouettes/* {
+        file_server
     }
 
     handle /images/* {
-        reverse_proxy backend:5000
+        file_server
     }
 
+    # SPA fallback - serve index.html for all other routes
     try_files {path} /index.html
+    file_server
 }
