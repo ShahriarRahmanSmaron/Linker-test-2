@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
@@ -27,4 +28,4 @@ COPY . .
 EXPOSE 5000
 
 # Run gunicorn
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "api_server:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "--timeout", "120", "--access-logfile", "-", "api_server:app"]

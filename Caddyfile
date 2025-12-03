@@ -7,7 +7,7 @@
         reverse_proxy backend:5000
     }
 
-    handle_path /static/* {
+    handle /static/* {
         reverse_proxy backend:5000
     }
 
