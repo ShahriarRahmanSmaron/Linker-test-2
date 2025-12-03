@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import { toast } from 'sonner';
 
 export const AdminLoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -9,26 +10,30 @@ export const AdminLoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // Form State
-    const [adminId, setAdminId] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
 
-        // Simulate network request
-        setTimeout(() => {
-            // Simple mock validation
-            if (adminId === 'admin' && password === 'admin123') {
-                login('admin', 'admin@linker.com');
-                navigate('/admin');
-            } else {
-                setError('Invalid Admin ID or Password');
-                setIsLoading(false);
+        try {
+            const user = await login('admin', email, password);
+            if (user) {
+                if (user.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    setError('Access denied. Admin credentials required.');
+                    toast.error('This account does not have admin privileges.');
+                }
             }
-        }, 1500);
+        } catch (err: any) {
+            setError(err.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -63,16 +68,16 @@ export const AdminLoginPage: React.FC = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-neutral-500 uppercase ml-1">Admin ID</label>
+                            <label className="text-xs font-bold text-neutral-500 uppercase ml-1">Admin Email</label>
                             <div className="relative">
-                                <UserIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500" size={18} />
+                                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500" size={18} />
                                 <input
-                                    type="text"
+                                    type="email"
                                     required
-                                    value={adminId}
-                                    onChange={(e) => setAdminId(e.target.value)}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-11 pr-4 py-3.5 bg-neutral-900/50 border border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all text-white placeholder-neutral-600"
-                                    placeholder="Enter Admin ID"
+                                    placeholder="admin@linker.app"
                                 />
                             </div>
                         </div>
@@ -125,7 +130,3 @@ export const AdminLoginPage: React.FC = () => {
     );
 };
 
-// Helper icon component since User is already imported in some contexts, 
-// but here we can just import it or use a different name.
-// Let's use User from lucide-react directly in the import.
-import { User as UserIcon } from 'lucide-react';

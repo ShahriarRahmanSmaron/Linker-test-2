@@ -1,8 +1,13 @@
+{
+    # Ensure handle blocks are processed before try_files
+    order handle before try_files
+}
+
 :80 {
     root * /srv
     encode gzip
 
-    # API routes -> proxy to Flask backend
+    # API routes -> proxy to Flask backend (processed FIRST)
     handle /api/* {
         reverse_proxy backend:5000
     }
@@ -28,7 +33,9 @@
         file_server
     }
 
-    # SPA fallback - serve index.html for all other routes
-    try_files {path} /index.html
-    file_server
+    # SPA fallback - only for non-API, non-static routes
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
 }
