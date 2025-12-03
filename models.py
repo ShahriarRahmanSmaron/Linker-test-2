@@ -5,7 +5,7 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))  # Scrypt hashes are ~200 chars
     role = db.Column(db.String(20), default='buyer')
     company_name = db.Column(db.String(100))
     
