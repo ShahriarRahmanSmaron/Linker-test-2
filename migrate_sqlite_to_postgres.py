@@ -88,16 +88,16 @@ def migrate_table(sqlite_cursor, pg_cursor, table_name):
     
     # Clear existing data in PostgreSQL (optional, comment out if you want to append)
     try:
-        pg_cursor.execute(f"TRUNCATE TABLE {table_name} CASCADE;")
+        pg_cursor.execute(f'TRUNCATE TABLE "{table_name}" CASCADE;')
         print(f"    Cleared existing PostgreSQL data")
     except Exception as e:
         print(f"    Note: Could not truncate (table might not exist yet): {e}")
     
     # Insert data into PostgreSQL
-    columns_str = ', '.join(columns)
+    columns_str = ', '.join([f'"{c}"' for c in columns])
     placeholders = ', '.join(['%s'] * len(columns))
     
-    insert_query = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})"
+    insert_query = f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})'
     
     try:
         for row in rows:
@@ -114,8 +114,8 @@ def reset_sequences(pg_cursor, table_name):
     try:
         # Get the max ID and reset the sequence
         pg_cursor.execute(f"""
-            SELECT setval(pg_get_serial_sequence('{table_name}', 'id'), 
-                   COALESCE((SELECT MAX(id) FROM {table_name}), 1), 
+            SELECT setval(pg_get_serial_sequence('"{table_name}"', 'id'), 
+                   COALESCE((SELECT MAX(id) FROM "{table_name}"), 1), 
                    true);
         """)
         print(f"    Reset sequence for {table_name}")
