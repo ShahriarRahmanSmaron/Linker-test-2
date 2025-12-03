@@ -1,12 +1,32 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: linker_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-linker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-linker_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-linker_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-linker} -d ${POSTGRES_DB:-linker_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: .
     container_name: linker_backend
     restart: always
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-linker}:${POSTGRES_PASSWORD:-linker_secure_password}@postgres:5432/${POSTGRES_DB:-linker_db}
     volumes:
       - ./instance:/app/instance
       - ./fabric_swatches:/app/fabric_swatches
@@ -20,6 +40,9 @@ services:
       - ./images:/app/images
     ports:
       - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   caddy:
     image: caddy:alpine
@@ -37,5 +60,6 @@ services:
       - backend
 
 volumes:
+  postgres_data:
   caddy_data:
   caddy_config:
