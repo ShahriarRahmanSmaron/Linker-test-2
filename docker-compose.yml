@@ -16,6 +16,8 @@ services:
       - ./Excel_files:/app/Excel_files
       - ./generated_mockups:/app/generated_mockups
       - ./generated_techpacks:/app/generated_techpacks
+      - ./techpack_templates:/app/techpack_templates
+      - ./images:/app/images
     ports:
       - "5000:5000"
 

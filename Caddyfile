@@ -11,5 +11,9 @@
         reverse_proxy backend:5000
     }
 
+    handle /images/* {
+        reverse_proxy backend:5000
+    }
+
     try_files {path} /index.html
 }
