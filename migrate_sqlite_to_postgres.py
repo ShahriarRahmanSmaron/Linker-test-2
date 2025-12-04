@@ -128,8 +128,12 @@ def ensure_schema_compatibility(pg_cursor):
     print("\n    Ensuring schema compatibility...")
     try:
         # Increase column lengths for fabric table
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "ref" TYPE VARCHAR(255);')
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "fabric_group" TYPE VARCHAR(255);')
         pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "fabrication" TYPE VARCHAR(255);')
         pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "composition" TYPE VARCHAR(255);')
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "width" TYPE VARCHAR(50);')
+        pg_cursor.execute('ALTER TABLE "fabric" ALTER COLUMN "status" TYPE VARCHAR(50);')
         print("    Updated fabric table column lengths")
     except Exception as e:
         print(f"    Note: Could not update schema (might already be updated or table missing): {e}")
