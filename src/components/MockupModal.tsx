@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogOverlay } from './ui/dialog';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/Skeleton';
+import { api } from '../lib/api';
 
 interface MockupModalProps {
   fabric: Fabric | null;
@@ -109,15 +110,9 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
         display_name: garment.displayName
       });
 
-      const response = await fetch('/api/generate-mockup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fabric_ref: fabricRef,
-          mockup_name: garment.name, // Use original casing
-        }),
+      const response = await api.post('/generate-mockup', {
+        fabric_ref: fabricRef,
+        mockup_name: garment.name, // Use original casing
       });
 
       if (response.ok) {
