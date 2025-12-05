@@ -52,10 +52,24 @@ setup_git.ps1
 *.pem
 deploy_to_aws.sh
 test_aws_connection.sh
-AWS_DEPLOYMENT_GUIDE.md
 
 # Migrations cache
 migrations/__pycache__/
 migrations/versions/__pycache__/
 cloud_key_new
 cloud_key_new.pub
+
+# Build output
+dist/
+
+# IDE
+.cursor/
+
+# Local screenshots/images
+*.png
+
+# Local scripts
+start_server.ps1
+
+# Documentation
+*.md
