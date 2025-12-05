@@ -59,4 +59,3 @@ migrations/__pycache__/
 migrations/versions/__pycache__/
 cloud_key_new
 cloud_key_new.pub
-GCP.md

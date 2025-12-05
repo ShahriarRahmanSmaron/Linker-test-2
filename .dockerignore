@@ -1,0 +1,126 @@
+# ===========================================
+# Docker Ignore File for Linker Project
+# ===========================================
+
+# Node.js - Frontend dependencies (NOT needed in Python backend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# Frontend source and build (served by Caddy, not Python)
+dist/
+src/
+*.tsx
+*.ts
+*.jsx
+index.html
+vite.config.ts
+tailwind.config.js
+postcss.config.js
+tsconfig.json
+package.json
+package-lock.json
+eslint.config.js
+components.json
+.prettierrc
+
+# Image assets (mounted as volumes at runtime)
+fabric_swatches/
+fabrics/
+mockups/
+masks/
+generated_mockups/
+generated_techpacks/
+silhouettes/
+images/
+techpack_templates/
+Excel_files/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.so
+.eggs/
+*.egg-info/
+*.egg
+.mypy_cache/
+.pytest_cache/
+pyrightconfig.json
+
+# Database files (mounted or created at runtime)
+instance/
+*.db
+*.sqlite3
+
+# Git
+.git/
+.gitignore
+
+# IDE and editors
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# Environment and secrets (NEVER include in image!)
+.env
+.env.*
+.env.local
+.env.example
+*.pem
+cloud_key_new
+cloud_key_new.pub
+linker-key-new.pem
+
+# Documentation (not needed in production)
+*.md
+*.png
+*.txt
+!requirements.txt
+1st page.png
+2nd page.png
+
+# Docker files (prevent recursive issues)
+Dockerfile
+docker-compose.yml
+Caddyfile
+.dockerignore
+
+# Test files
+test_*.py
+*_test.py
+
+# Shell and PowerShell scripts
+*.sh
+*.ps1
+deploy_to_aws.sh
+start_server.sh
+start_server.ps1
+setup_git.ps1
+test_aws_connection.sh
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Alembic migrations cache (keep migrations/ but not cache)
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# Misc development files
+.flake8
+create_admin_script.py
+verify_db.py
+migrate_sqlite_to_postgres.py
