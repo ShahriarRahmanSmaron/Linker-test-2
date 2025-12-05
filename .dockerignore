@@ -101,6 +101,7 @@ test_*.py
 
 # Shell and PowerShell scripts
 *.sh
+!docker-entrypoint.sh
 *.ps1
 deploy_to_aws.sh
 start_server.sh
