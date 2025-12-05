@@ -25,6 +25,10 @@ PGPASSWORD="${POSTGRES_PASSWORD:-linker_secure_password}" psql \
     -d "${POSTGRES_DB:-linker_db}" \
     -c "ALTER TABLE \"user\" ALTER COLUMN password_hash TYPE VARCHAR(256);" 2>/dev/null || true
 
+# Create admin user if it doesn't exist
+echo "[4/4] Creating admin user..."
+flask create-admin || echo "  Admin user may already exist"
+
 echo "========================================"
 echo "Starting Gunicorn server..."
 echo "========================================"
