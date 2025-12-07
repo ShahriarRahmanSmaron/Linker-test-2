@@ -625,23 +625,62 @@ def signup():
 @app.route('/api/auth/login', methods=['POST'])
 @limiter.limit("10 per minute")
 def login():
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    user = User.query.filter_by(email=email).first()
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({"msg": "Bad email or password"}), 401
-    
-    # Security: Only allow admins to login via password
-    if user.role != 'admin':
-        return jsonify({"msg": "Access denied. Only admins can login via this endpoint."}), 403
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"msg": "Request body is required"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"msg": "Email and password are required"}), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"msg": "Bad email or password"}), 401
+        
+        # Check if user has a password hash (Clerk users don't have one)
+        if not user.password_hash:
+            return jsonify({"msg": "Bad email or password"}), 401
+        
+        if not check_password_hash(user.password_hash, password):
+            return jsonify({"msg": "Bad email or password"}), 401
+        
+        # Security: Only allow admins to login via password
+        if user.role != 'admin':
+            return jsonify({"msg": "Access denied. Only admins can login via this endpoint."}), 403
 
-    additional_claims = {"role": user.role, "company": user.company_name}
-    access_token = create_access_token(identity=str(user.id), additional_claims=additional_claims)
-    return jsonify({
-        "token": access_token,
-        "user_profile": {"id": user.id, "email": user.email, "role": user.role, "name": user.company_name}
-    }), 200
+        additional_claims = {
+            "role": user.role, 
+            "company": user.company_name or "",
+            "approval_status": getattr(user, 'approval_status', 'none'),
+            "is_verified_buyer": getattr(user, 'is_verified_buyer', False)
+        }
+        access_token = create_access_token(identity=str(user.id), additional_claims=additional_claims)
+        
+        # Build user profile with safe field access
+        user_profile = {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "name": user.company_name or "",
+            "approval_status": getattr(user, 'approval_status', 'none'),
+            "is_verified_buyer": getattr(user, 'is_verified_buyer', False)
+        }
+        
+        return jsonify({
+            "token": access_token,
+            "user_profile": user_profile
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        logger.error(f"Admin login error: {e}\n{error_traceback}")
+        db.session.rollback()
+        error_msg = str(e) if app.config.get('DEBUG', False) else "An unexpected error occurred during login"
+        return jsonify({"msg": error_msg}), 500
 
 @app.route('/api/auth/me', methods=['GET'])
 @jwt_required()
@@ -672,6 +711,14 @@ def clerk_sync():
     
     Frontend role selection is for UX only - backend has final authority.
     """
+    # Early validation check
+    if not CLERK_JWKS_URL:
+        logger.error("CLERK_JWKS_URL not configured - cannot verify Clerk tokens")
+        return jsonify({
+            "msg": "Clerk authentication not properly configured. Please contact support.",
+            "error": "CLERK_JWKS_URL missing"
+        }), 500
+    
     try:
         # 1. Extract and verify Clerk token from Authorization header
         auth_header = request.headers.get('Authorization', '')
@@ -860,8 +907,13 @@ def clerk_sync():
         logger.error(f"Clerk sync error: {e}\n{error_traceback}")
         db.session.rollback()
         # Return more detailed error in development, generic in production
-        error_msg = str(e) if app.config.get('DEBUG', False) else "An unexpected error occurred during authentication"
-        return jsonify({"msg": error_msg}), 500
+        # error_msg = str(e) if app.config.get('DEBUG', False) else "An unexpected error occurred during authentication"
+        # TEMPORARY DEBUGGING: Always return detailed error
+        return jsonify({
+            "msg": "An unexpected error occurred during authentication",
+            "error": str(e),
+            "trace": traceback.format_exc()
+        }), 500
 
 
 @app.route('/api/webhooks/clerk', methods=['POST'])

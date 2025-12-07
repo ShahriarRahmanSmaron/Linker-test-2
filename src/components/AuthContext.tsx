@@ -91,8 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return data.user;
       } else {
         const error = await response.json();
-        toast.error(error.msg || 'Authentication sync failed');
-        throw new Error(error.msg);
+        // Log full error details for debugging
+        console.error('Clerk sync API error:', error);
+        const errorMessage = error.msg || error.error || 'Authentication sync failed';
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error("Clerk sync error:", error);
