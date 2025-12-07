@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { ValuePropSection } from './components/ValuePropSection';
@@ -17,9 +16,11 @@ import { SearchPage } from './components/SearchPage';
 import { ManufacturerDashboard } from './components/manufacturer/ManufacturerDashboard';
 import { BuyerDashboard } from './components/buyer/BuyerDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminLoginPage } from './components/admin/AdminLoginPage';
+import { ApprovalPending } from './components/ApprovalPending';
 
 import { LoginPage } from './components/LoginPage';
-import { AuthProvider, useAuth } from './components/AuthContext';
+import { AuthProvider } from './components/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -50,13 +51,21 @@ const LandingPage: React.FC = () => {
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LightModeWrapper><LoginPage /></LightModeWrapper>} />
+      
+      {/* Admin Login - Legacy auth (separate from Clerk) */}
+      <Route path="/admin-login" element={<LightModeWrapper><AdminLoginPage /></LightModeWrapper>} />
 
+      {/* Manufacturer Approval Pending Page */}
+      <Route path="/approval-pending" element={<LightModeWrapper><ApprovalPending /></LightModeWrapper>} />
+
+      {/* Search - Allow both verified buyers and general users */}
       <Route
         path="/search"
         element={
-          <ProtectedRoute allowedRole="buyer">
+          <ProtectedRoute allowedRoles={['buyer', 'general_user']}>
             <LightModeWrapper>
               <SearchPage />
             </LightModeWrapper>
@@ -64,10 +73,11 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Manufacturer Dashboard - Requires approval */}
       <Route
         path="/manufacturer-dashboard"
         element={
-          <ProtectedRoute allowedRole="manufacturer">
+          <ProtectedRoute allowedRole="manufacturer" requireApproval>
             <LightModeWrapper>
               <ManufacturerDashboard />
             </LightModeWrapper>
@@ -75,6 +85,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Admin Dashboard - Legacy JWT auth only */}
       <Route
         path="/admin"
         element={
@@ -86,10 +97,11 @@ const AppRoutes: React.FC = () => {
         }
       />
 
+      {/* Buyer Dashboard - Allow both verified buyers and general users */}
       <Route
         path="/buyer-dashboard"
         element={
-          <ProtectedRoute allowedRole="buyer">
+          <ProtectedRoute allowedRoles={['buyer', 'general_user']}>
             <LightModeWrapper>
               <BuyerDashboard />
             </LightModeWrapper>

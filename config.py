@@ -75,6 +75,13 @@ class Settings(BaseSettings):
     MASCO_PASSWORD: str = Field(default="masco123", description="Masco manufacturer user password")
     CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,http://13.203.231.247", description="Comma-separated list of allowed CORS origins")
     
+    # ===== Clerk Authentication Settings =====
+    # IMPORTANT: Set CLERK_JWKS_URL to your Clerk instance's JWKS endpoint
+    # Format: https://<your-subdomain>.clerk.accounts.dev/.well-known/jwks.json
+    CLERK_SECRET_KEY: str = Field(default="", description="Clerk secret key for backend JWT verification")
+    CLERK_WEBHOOK_SECRET: str = Field(default="", description="Clerk webhook signing secret for signature verification")
+    CLERK_JWKS_URL: str = Field(default="", description="Clerk JWKS URL - REQUIRED for Clerk auth to work")
+    
     @field_validator("OUTPUT_FORMAT")
     @classmethod
     def validate_output_format(cls, v: str) -> str:

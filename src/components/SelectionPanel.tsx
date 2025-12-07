@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Fabric } from '../types';
-import { X, ChevronUp, ChevronDown, Layout, Trash2 } from 'lucide-react';
+import { X, ChevronUp, ChevronDown, Layout, Trash2, AlertCircle, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { useAuth } from './AuthContext';
 
 interface SelectionPanelProps {
   selectedFabrics: Fabric[];
@@ -13,6 +13,7 @@ interface SelectionPanelProps {
 
 export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics, onRemove, onClear }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const { canRequestSamples, user } = useAuth();
 
   // Auto-open panel when first item is added
   useEffect(() => {
@@ -22,6 +23,9 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
   }, [selectedFabrics.length]);
 
   if (selectedFabrics.length === 0) return null;
+  
+  // Check if user is verified buyer (can request samples)
+  const isVerifiedBuyer = canRequestSamples;
 
   return (
     <div className={`fixed z-40 transition-all duration-500 ease-in-out shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]
@@ -98,14 +102,53 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
 
       {/* Footer Actions */}
       <div className="p-4 border-t border-neutral-100 bg-white rounded-b-2xl">
+        {/* Verification Warning for General Users */}
+        {!isVerifiedBuyer && user?.role === 'general_user' && (
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-amber-800">Company Verification Required</p>
+                <p className="text-xs text-amber-600 mt-0.5">
+                  Use your company email to request samples and access exclusive features.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <Button
-          className="w-full bg-neutral-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-xl shadow-neutral-900/10 hover:bg-black hover:scale-[1.02] hover:shadow-2xl hover:shadow-neutral-900/20 active:scale-95 transition-all duration-200 mb-3"
+          className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all duration-200 mb-3 ${
+            isVerifiedBuyer 
+              ? 'bg-neutral-900 text-white shadow-neutral-900/10 hover:bg-black hover:scale-[1.02] hover:shadow-2xl hover:shadow-neutral-900/20 active:scale-95'
+              : 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
+          }`}
+          onClick={() => {
+            if (isVerifiedBuyer) {
+              toast.success('Sample request initiated!', {
+                description: `${selectedFabrics.length} fabrics selected for sampling`,
+              });
+            } else {
+              toast.error('Verification Required', {
+                description: 'Please sign up with your company email to request samples.',
+                icon: <Mail className="w-4 h-4" />,
+              });
+            }
+          }}
+          disabled={!isVerifiedBuyer}
+        >
+          {isVerifiedBuyer ? 'Request Samples' : 'Verify Email to Request Samples'}
+        </Button>
+        
+        <Button
+          className="w-full bg-neutral-100 text-neutral-700 py-3.5 rounded-xl font-bold text-sm hover:bg-neutral-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 mb-3"
           onClick={() => toast.success('Moodboard creation demo!', {
             description: `${selectedFabrics.length} fabrics selected`,
           })}
         >
           Create Moodboard
         </Button>
+        
         <Button
           variant="ghost"
           size="sm"

@@ -13,7 +13,8 @@ import {
   LogOut,
   Menu,
   ChevronLeft,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import { StagingInbox } from './content/StagingInbox';
 import { LiveDbView } from './content/LiveDbView';
 import { FabricEditor } from './content/FabricEditor';
+import { UserManagement } from './content/UserManagement';
 import { AdminFabric } from '@/types';
 
 // Types
@@ -77,7 +79,7 @@ interface Query {
   action: string;
 }
 
-type DashboardView = 'dashboard' | 'action-center' | 'finance' | 'messages' | 'content-manager';
+type DashboardView = 'dashboard' | 'action-center' | 'finance' | 'messages' | 'content-manager' | 'user-management';
 
 // Mock data
 const MOCK_DATA: AdminDashboardData = {
@@ -195,6 +197,7 @@ export const AdminDashboard: React.FC = () => {
 
   const menuItems = [
     { id: 'dashboard' as DashboardView, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'user-management' as DashboardView, label: 'User Management', icon: Users },
     { id: 'content-manager' as DashboardView, label: 'Content Manager', icon: Edit },
     { id: 'action-center' as DashboardView, label: 'Action Center', icon: AlertCircle },
     { id: 'finance' as DashboardView, label: 'Finance Desk', icon: DollarSign },
@@ -587,6 +590,9 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
         );
+
+      case 'user-management':
+        return <UserManagement />;
 
       default:
         return null;

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export const AdminLoginPage: React.FC = () => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { loginAdmin } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form State
@@ -20,7 +20,7 @@ export const AdminLoginPage: React.FC = () => {
         setError('');
 
         try {
-            const user = await login('admin', email, password);
+            const user = await loginAdmin(email, password);
             if (user) {
                 if (user.role === 'admin') {
                     navigate('/admin');

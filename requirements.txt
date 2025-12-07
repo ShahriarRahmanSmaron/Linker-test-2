@@ -18,6 +18,11 @@ rich  # Required by flask-limiter CLI
 werkzeug
 psycopg2-binary
 
+# Clerk JWT Verification
+PyJWT>=2.8.0
+cryptography>=41.0.0  # Required for RS256 algorithm
+requests>=2.31.0  # For calling Clerk API
+
 # Production WSGI Server
 gunicorn>=21.0.0
 
@@ -45,4 +50,3 @@ python-pptx>=0.6.21
 # - logging
 # - datetime
 # - pathlib
-

@@ -1,5 +1,6 @@
 """
-Mockup Generator 2.0 - API Server v5.2
+Mockup Generator 2.0 - API Server v5.3
+Includes Clerk hybrid authentication for buyers/manufacturers
 """
 
 import os
@@ -9,6 +10,8 @@ import logging
 import re
 import io
 import sys
+import hmac
+import hashlib
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
@@ -25,6 +28,9 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR
+import jwt as pyjwt
+from jwt import PyJWKClient
+import requests
 
 # ===== CONFIGURATION =====
 from config import settings
@@ -78,6 +84,99 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+# ===== CLERK INTEGRATION =====
+# Load Clerk configuration from environment
+# Load Clerk configuration from environment
+CLERK_SECRET_KEY = settings.CLERK_SECRET_KEY
+
+CLERK_WEBHOOK_SECRET = settings.CLERK_WEBHOOK_SECRET  # For webhook signature verification
+
+# Clerk JWKS URL for token verification
+# IMPORTANT: Set this to your Clerk instance's JWKS URL
+# Format: https://<your-clerk-subdomain>.clerk.accounts.dev/.well-known/jwks.json
+# Example: https://glowing-mule-27.clerk.accounts.dev/.well-known/jwks.json
+CLERK_JWKS_URL = settings.CLERK_JWKS_URL
+
+if not CLERK_JWKS_URL:
+    logger.warning(
+        "CLERK_JWKS_URL not set! Clerk authentication will fail. "
+        "Set it in your .env file."
+    )
+
+# Load allowed company domains into memory at startup (O(1) lookup)
+ALLOWED_DOMAINS_FILE = os.path.join(PROJECT_ROOT, 'data', 'allowed_companies.csv')
+ALLOWED_DOMAINS: set = set()
+
+def load_allowed_domains():
+    """Load allowed company domains from CSV file into memory."""
+    global ALLOWED_DOMAINS
+    try:
+        if os.path.exists(ALLOWED_DOMAINS_FILE):
+            with open(ALLOWED_DOMAINS_FILE, 'r') as f:
+                domains = set()
+                for line in f:
+                    line = line.strip().lower()
+                    # Skip empty lines and comments
+                    if line and not line.startswith('#'):
+                        domains.add(line)
+                ALLOWED_DOMAINS = domains
+                logger.info(f"Loaded {len(ALLOWED_DOMAINS)} allowed domains for buyer verification")
+        else:
+            logger.warning(f"Allowed domains file not found: {ALLOWED_DOMAINS_FILE}")
+    except Exception as e:
+        logger.error(f"Error loading allowed domains: {e}")
+
+# Load domains at startup
+load_allowed_domains()
+
+def get_email_domain(email: str) -> str:
+    """Extract domain from email address."""
+    if '@' in email:
+        return email.split('@')[1].lower()
+    return ''
+
+def verify_clerk_token(token: str) -> dict:
+    """
+    Verify Clerk JWT token using JWKS.
+    Returns decoded claims if valid, raises exception otherwise.
+    """
+    if not CLERK_JWKS_URL:
+        raise ValueError(
+            "CLERK_JWKS_URL not configured. "
+            "Set it in .env to: https://<your-clerk-subdomain>.clerk.accounts.dev/.well-known/jwks.json"
+        )
+    
+    try:
+        # Get the JWKS client
+        jwks_client = PyJWKClient(CLERK_JWKS_URL)
+        
+        # Get the signing key from the JWT header
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        
+        # Decode and verify the token
+        decoded = pyjwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            options={"verify_aud": False}  # Clerk doesn't always set audience
+        )
+        return decoded
+    except pyjwt.ExpiredSignatureError:
+        raise ValueError("Token has expired")
+    except pyjwt.InvalidTokenError as e:
+        raise ValueError(f"Invalid token: {str(e)}")
+    except Exception as e:
+        logger.error(f"JWKS verification error (URL: {CLERK_JWKS_URL}): {e}")
+        raise ValueError(f"Token verification failed: {str(e)}")
 
 # Configure logging
 logging.basicConfig(
@@ -530,6 +629,11 @@ def login():
     user = User.query.filter_by(email=email).first()
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"msg": "Bad email or password"}), 401
+    
+    # Security: Only allow admins to login via password
+    if user.role != 'admin':
+        return jsonify({"msg": "Access denied. Only admins can login via this endpoint."}), 403
+
     additional_claims = {"role": user.role, "company": user.company_name}
     access_token = create_access_token(identity=str(user.id), additional_claims=additional_claims)
     return jsonify({
@@ -543,7 +647,395 @@ def get_current_user():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
     if not user: return jsonify({"msg": "User not found"}), 404
-    return jsonify({"id": user.id, "email": user.email, "role": user.role, "name": user.company_name}), 200
+    return jsonify({
+        "id": user.id, 
+        "email": user.email, 
+        "role": user.role, 
+        "name": user.company_name,
+        "approval_status": user.approval_status,
+        "is_verified_buyer": user.is_verified_buyer
+    }), 200
+
+# ===== CLERK AUTHENTICATION ENDPOINTS =====
+
+@app.route('/api/auth/clerk-sync', methods=['POST'])
+@limiter.limit("100 per minute")
+def clerk_sync():
+    """
+    Sync Clerk user to local database and issue Flask JWT.
+    
+    Security: Backend determines role based on:
+    1. Email domain verification against allowed_companies.csv
+    2. Requested role (manufacturer requires approval)
+    
+    Frontend role selection is for UX only - backend has final authority.
+    """
+    try:
+        # 1. Extract and verify Clerk token from Authorization header
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({"msg": "Missing or invalid Authorization header"}), 401
+        
+        clerk_token = auth_header.split(' ')[1]
+        
+        try:
+            claims = verify_clerk_token(clerk_token)
+        except ValueError as e:
+            logger.warning(f"Clerk token verification failed: {e}")
+            return jsonify({"msg": str(e)}), 401
+        
+        # 2. Extract user info from verified claims
+        clerk_id = claims.get('sub')  # Clerk user ID
+        email = claims.get('email') or claims.get('email_addresses', [{}])[0].get('email_address', '')
+        
+        # Fallback: Fetch from Clerk API if email is missing in token
+        if clerk_id and not email and CLERK_SECRET_KEY:
+            try:
+                logger.info(f"Fetching user {clerk_id} from Clerk API...")
+                headers = {'Authorization': f'Bearer {CLERK_SECRET_KEY}'}
+                resp = requests.get(f'https://api.clerk.com/v1/users/{clerk_id}', headers=headers)
+                if resp.status_code == 200:
+                    clerk_user_data = resp.json()
+                    email_addresses = clerk_user_data.get('email_addresses', [])
+                    if email_addresses:
+                        # Use primary email or first available
+                        primary_id = clerk_user_data.get('primary_email_address_id')
+                        email_obj = next((e for e in email_addresses if e['id'] == primary_id), email_addresses[0])
+                        email = email_obj.get('email_address', '')
+            except Exception as api_err:
+                logger.error(f"Failed to fetch from Clerk API: {api_err}")
+
+        if not clerk_id or not email:
+            logger.error(f"Token claims missing ID or Email. ClerkID: {clerk_id}, Email found: {bool(email)}")
+            return jsonify({"msg": "Invalid token claims: missing user ID or email"}), 400
+        
+        # 3. Get requested role from body (optional, for UX)
+        data = request.json or {}
+        requested_role = data.get('requested_role', 'buyer')
+        company_name = data.get('company_name', '')
+        
+        # 4. Backend authority: determine actual role
+        email_domain = get_email_domain(email)
+        
+        # Role determination logic:
+        # - If requesting manufacturer -> role='manufacturer', status='pending'
+        # - Elif domain in whitelist -> role='buyer', is_verified_buyer=True
+        # - Else -> role='general_user'
+        
+        if requested_role == 'manufacturer':
+            role = 'manufacturer'
+            approval_status = 'pending'
+            is_verified_buyer = False
+        elif email_domain in ALLOWED_DOMAINS:
+            role = 'buyer'
+            approval_status = 'none'
+            is_verified_buyer = True
+        else:
+            role = 'general_user'
+            approval_status = 'none'
+            is_verified_buyer = False
+        
+        # 5. Find or create user in database
+        user = User.query.filter(
+            (User.clerk_id == clerk_id) | (User.email == email)
+        ).first()
+        
+        if user:
+            # Update existing user with Clerk ID if not set
+            if not user.clerk_id:
+                user.clerk_id = clerk_id
+            
+            # Only update role if user was previously general_user and now qualifies for upgrade
+            # Don't downgrade existing buyers/manufacturers
+            if user.role == 'general_user':
+                user.role = role
+                user.approval_status = approval_status
+                user.is_verified_buyer = is_verified_buyer
+            elif user.role == 'buyer' and not user.is_verified_buyer and is_verified_buyer:
+                # Upgrade unverified buyer to verified
+                user.is_verified_buyer = True
+            
+            # Update company name if provided and not set
+            if company_name and not user.company_name:
+                user.company_name = company_name
+                
+            db.session.commit()
+        else:
+            # Create new user
+            user = User(
+                email=email,
+                clerk_id=clerk_id,
+                role=role,
+                company_name=company_name,
+                approval_status=approval_status,
+                is_verified_buyer=is_verified_buyer,
+                password_hash=None  # Clerk users don't have local passwords
+            )
+            db.session.add(user)
+            db.session.commit()
+            logger.info(f"Created new Clerk user: {email} with role: {role}")
+        
+        # 6. Generate Flask JWT for API calls
+        additional_claims = {
+            "role": user.role,
+            "company": user.company_name,
+            "approval_status": user.approval_status,
+            "is_verified_buyer": user.is_verified_buyer
+        }
+        access_token = create_access_token(identity=str(user.id), additional_claims=additional_claims)
+        
+        # 7. Return token and user profile
+        return jsonify({
+            "token": access_token,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "role": user.role,
+                "name": user.company_name,
+                "approval_status": user.approval_status,
+                "is_verified_buyer": user.is_verified_buyer
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Clerk sync error: {e}")
+        db.session.rollback()
+        return jsonify({"msg": "An unexpected error occurred during authentication"}), 500
+
+
+@app.route('/api/webhooks/clerk', methods=['POST'])
+def clerk_webhook():
+    """
+    Clerk webhook endpoint for user.created events.
+    This is a backup sync mechanism to prevent ghost users
+    (users who exist in Clerk but not in our database).
+    
+    Security: Verifies webhook signature using svix headers.
+    """
+    try:
+        # Get webhook signature headers
+        svix_id = request.headers.get('svix-id')
+        svix_timestamp = request.headers.get('svix-timestamp')
+        svix_signature = request.headers.get('svix-signature')
+        
+        if not all([svix_id, svix_timestamp, svix_signature]):
+            logger.warning("Clerk webhook missing signature headers")
+            return jsonify({"msg": "Missing webhook signature headers"}), 400
+        
+        # Verify signature if secret is configured
+        if CLERK_WEBHOOK_SECRET:
+            payload = request.get_data(as_text=True)
+            
+            # Construct the signed content
+            signed_content = f"{svix_id}.{svix_timestamp}.{payload}"
+            
+            # Get the expected signature (format: v1,<base64_signature>)
+            expected_signatures = svix_signature.split(' ')
+            signature_valid = False
+            
+            for sig in expected_signatures:
+                if sig.startswith('v1,'):
+                    expected_sig = sig[3:]  # Remove 'v1,' prefix
+                    
+                    # Compute HMAC
+                    secret_bytes = CLERK_WEBHOOK_SECRET.encode('utf-8')
+                    if CLERK_WEBHOOK_SECRET.startswith('whsec_'):
+                        # Decode base64 secret
+                        import base64
+                        secret_bytes = base64.b64decode(CLERK_WEBHOOK_SECRET[6:])
+                    
+                    computed_sig = hmac.new(
+                        secret_bytes,
+                        signed_content.encode('utf-8'),
+                        hashlib.sha256
+                    ).digest()
+                    
+                    import base64
+                    computed_sig_b64 = base64.b64encode(computed_sig).decode('utf-8')
+                    
+                    if hmac.compare_digest(computed_sig_b64, expected_sig):
+                        signature_valid = True
+                        break
+            
+            if not signature_valid:
+                logger.warning("Clerk webhook signature verification failed")
+                return jsonify({"msg": "Invalid webhook signature"}), 401
+        
+        # Parse webhook payload
+        data = request.json
+        event_type = data.get('type')
+        
+        if event_type == 'user.created':
+            user_data = data.get('data', {})
+            clerk_id = user_data.get('id')
+            email_addresses = user_data.get('email_addresses', [])
+            email = email_addresses[0].get('email_address') if email_addresses else None
+            
+            if not clerk_id or not email:
+                logger.warning("Clerk webhook user.created missing required fields")
+                return jsonify({"msg": "Missing required user fields"}), 400
+            
+            # Check if user already exists (from primary sync)
+            existing_user = User.query.filter(
+                (User.clerk_id == clerk_id) | (User.email == email)
+            ).first()
+            
+            if existing_user:
+                # User already exists, update clerk_id if needed
+                if not existing_user.clerk_id:
+                    existing_user.clerk_id = clerk_id
+                    db.session.commit()
+                logger.info(f"Clerk webhook: User {email} already exists")
+            else:
+                # Create new user with general_user role
+                # They'll get proper role assignment on first login via clerk-sync
+                email_domain = get_email_domain(email)
+                is_verified = email_domain in ALLOWED_DOMAINS
+                
+                new_user = User(
+                    email=email,
+                    clerk_id=clerk_id,
+                    role='buyer' if is_verified else 'general_user',
+                    approval_status='none',
+                    is_verified_buyer=is_verified,
+                    password_hash=None
+                )
+                db.session.add(new_user)
+                db.session.commit()
+                logger.info(f"Clerk webhook: Created user {email} as backup sync")
+            
+            return jsonify({"success": True}), 200
+        
+        elif event_type == 'user.deleted':
+            # Optionally handle user deletion
+            user_data = data.get('data', {})
+            clerk_id = user_data.get('id')
+            
+            if clerk_id:
+                user = User.query.filter_by(clerk_id=clerk_id).first()
+                if user:
+                    # Mark user as deleted or remove - depends on your data retention policy
+                    logger.info(f"Clerk webhook: User {user.email} deleted from Clerk")
+                    # Uncomment to actually delete:
+                    # db.session.delete(user)
+                    # db.session.commit()
+            
+            return jsonify({"success": True}), 200
+        
+        # Acknowledge other event types
+        return jsonify({"success": True}), 200
+        
+    except Exception as e:
+        logger.error(f"Clerk webhook error: {e}")
+        db.session.rollback()
+        return jsonify({"msg": "Webhook processing failed"}), 500
+
+
+# ===== ADMIN USER MANAGEMENT ENDPOINTS =====
+
+@app.route('/api/admin/users', methods=['GET'])
+@admin_required()
+def get_admin_users():
+    """Get all users for admin management, with optional status filter."""
+    try:
+        status_filter = request.args.get('approval_status')
+        role_filter = request.args.get('role')
+        
+        query = User.query
+        
+        if status_filter:
+            query = query.filter_by(approval_status=status_filter)
+        if role_filter:
+            query = query.filter_by(role=role_filter)
+        
+        users = query.order_by(User.id.desc()).limit(100).all()
+        
+        return jsonify([{
+            "id": u.id,
+            "email": u.email,
+            "role": u.role,
+            "company_name": u.company_name,
+            "approval_status": u.approval_status,
+            "is_verified_buyer": u.is_verified_buyer,
+            "has_clerk_id": bool(u.clerk_id)
+        } for u in users])
+        
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
+@app.route('/api/admin/user/<int:user_id>/approve', methods=['POST'])
+@admin_required()
+def approve_user(user_id):
+    """Approve a manufacturer's account."""
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        if user.role != 'manufacturer':
+            return jsonify({"msg": "Only manufacturer accounts require approval"}), 400
+        
+        user.approval_status = 'approved'
+        db.session.commit()
+        
+        logger.info(f"Admin approved manufacturer: {user.email}")
+        return jsonify({"success": True, "message": f"Manufacturer {user.email} approved"})
+        
+    except Exception as e:
+        logger.error(f"Error approving user {user_id}: {e}")
+        db.session.rollback()
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
+@app.route('/api/admin/user/<int:user_id>/reject', methods=['POST'])
+@admin_required()
+def reject_user(user_id):
+    """Reject a manufacturer's account."""
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        if user.role != 'manufacturer':
+            return jsonify({"msg": "Only manufacturer accounts can be rejected"}), 400
+        
+        user.approval_status = 'rejected'
+        db.session.commit()
+        
+        logger.info(f"Admin rejected manufacturer: {user.email}")
+        return jsonify({"success": True, "message": f"Manufacturer {user.email} rejected"})
+        
+    except Exception as e:
+        logger.error(f"Error rejecting user {user_id}: {e}")
+        db.session.rollback()
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+
+@app.route('/api/admin/domains', methods=['GET', 'POST'])
+@admin_required()
+def manage_domains():
+    """Get or update the allowed domains list."""
+    try:
+        if request.method == 'GET':
+            return jsonify({"domains": list(ALLOWED_DOMAINS)})
+        
+        elif request.method == 'POST':
+            data = request.json
+            domains = data.get('domains', [])
+            
+            # Write to file
+            with open(ALLOWED_DOMAINS_FILE, 'w') as f:
+                f.write("# Allowed Company Domains for Verified Buyer Status\n")
+                f.write("# Updated via Admin Dashboard\n\n")
+                for domain in domains:
+                    f.write(f"{domain.strip().lower()}\n")
+            
+            # Reload into memory
+            load_allowed_domains()
+            
+            return jsonify({"success": True, "count": len(ALLOWED_DOMAINS)})
+            
+    except Exception as e:
+        logger.error(f"Error managing domains: {e}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 # ===== CLI COMMANDS =====
 @app.cli.command('create-admin')
