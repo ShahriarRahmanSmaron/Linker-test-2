@@ -16,6 +16,8 @@ from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
@@ -686,28 +688,51 @@ def clerk_sync():
         
         # 2. Extract user info from verified claims
         clerk_id = claims.get('sub')  # Clerk user ID
-        email = claims.get('email') or claims.get('email_addresses', [{}])[0].get('email_address', '')
+        
+        # Try multiple ways to get email from token
+        email = (
+            claims.get('email') or 
+            claims.get('email_address') or
+            (claims.get('email_addresses', [{}])[0].get('email_address', '') if claims.get('email_addresses') else '')
+        )
         
         # Fallback: Fetch from Clerk API if email is missing in token
-        if clerk_id and not email and CLERK_SECRET_KEY:
-            try:
-                logger.info(f"Fetching user {clerk_id} from Clerk API...")
-                headers = {'Authorization': f'Bearer {CLERK_SECRET_KEY}'}
-                resp = requests.get(f'https://api.clerk.com/v1/users/{clerk_id}', headers=headers)
-                if resp.status_code == 200:
-                    clerk_user_data = resp.json()
-                    email_addresses = clerk_user_data.get('email_addresses', [])
-                    if email_addresses:
-                        # Use primary email or first available
-                        primary_id = clerk_user_data.get('primary_email_address_id')
-                        email_obj = next((e for e in email_addresses if e['id'] == primary_id), email_addresses[0])
-                        email = email_obj.get('email_address', '')
-            except Exception as api_err:
-                logger.error(f"Failed to fetch from Clerk API: {api_err}")
+        if clerk_id and not email:
+            if CLERK_SECRET_KEY:
+                try:
+                    logger.info(f"Fetching user {clerk_id} from Clerk API (email not in token)...")
+                    headers = {'Authorization': f'Bearer {CLERK_SECRET_KEY}'}
+                    resp = requests.get(f'https://api.clerk.com/v1/users/{clerk_id}', headers=headers, timeout=5)
+                    if resp.status_code == 200:
+                        clerk_user_data = resp.json()
+                        email_addresses = clerk_user_data.get('email_addresses', [])
+                        if email_addresses:
+                            # Use primary email or first verified email
+                            primary_id = clerk_user_data.get('primary_email_address_id')
+                            # Prefer verified emails
+                            verified_emails = [e for e in email_addresses if e.get('verification', {}).get('status') == 'verified']
+                            if verified_emails:
+                                email_obj = next((e for e in verified_emails if e['id'] == primary_id), verified_emails[0])
+                            else:
+                                email_obj = next((e for e in email_addresses if e['id'] == primary_id), email_addresses[0])
+                            email = email_obj.get('email_address', '')
+                            logger.info(f"Retrieved email {email} from Clerk API for user {clerk_id}")
+                    else:
+                        logger.warning(f"Clerk API returned status {resp.status_code} for user {clerk_id}")
+                except requests.exceptions.RequestException as api_err:
+                    logger.error(f"Failed to fetch from Clerk API: {api_err}")
+                except Exception as api_err:
+                    logger.error(f"Unexpected error fetching from Clerk API: {api_err}")
+            else:
+                logger.warning("CLERK_SECRET_KEY not set, cannot fetch email from Clerk API")
 
-        if not clerk_id or not email:
-            logger.error(f"Token claims missing ID or Email. ClerkID: {clerk_id}, Email found: {bool(email)}")
-            return jsonify({"msg": "Invalid token claims: missing user ID or email"}), 400
+        if not clerk_id:
+            logger.error("Token claims missing Clerk user ID (sub)")
+            return jsonify({"msg": "Invalid token: missing user ID"}), 400
+            
+        if not email:
+            logger.error(f"Token claims missing Email. ClerkID: {clerk_id}, Email found: False")
+            return jsonify({"msg": "Email verification required. Please verify your email address in Clerk before signing in."}), 400
         
         # 3. Get requested role from body (optional, for UX)
         data = request.json or {}
@@ -736,13 +761,20 @@ def clerk_sync():
             is_verified_buyer = False
         
         # 5. Find or create user in database
+        # Use case-insensitive email matching to handle email variations
         user = User.query.filter(
-            (User.clerk_id == clerk_id) | (User.email == email)
+            (User.clerk_id == clerk_id) | (func.lower(User.email) == email.lower())
         ).first()
         
         if user:
             # Update existing user with Clerk ID if not set
+            # Check if clerk_id is already taken by another user
             if not user.clerk_id:
+                # Verify clerk_id is not already assigned to another user
+                existing_clerk_user = User.query.filter_by(clerk_id=clerk_id).first()
+                if existing_clerk_user and existing_clerk_user.id != user.id:
+                    logger.error(f"Clerk ID {clerk_id} already assigned to user {existing_clerk_user.email}")
+                    return jsonify({"msg": "Account conflict: Clerk ID already in use"}), 409
                 user.clerk_id = clerk_id
             
             # Only update role if user was previously general_user and now qualifies for upgrade
@@ -759,7 +791,12 @@ def clerk_sync():
             if company_name and not user.company_name:
                 user.company_name = company_name
                 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except IntegrityError as ie:
+                db.session.rollback()
+                logger.error(f"Database integrity error updating user: {ie}")
+                return jsonify({"msg": "Database error: Unable to update user account"}), 500
         else:
             # Create new user
             user = User(
@@ -772,8 +809,28 @@ def clerk_sync():
                 password_hash=None  # Clerk users don't have local passwords
             )
             db.session.add(user)
-            db.session.commit()
-            logger.info(f"Created new Clerk user: {email} with role: {role}")
+            try:
+                db.session.commit()
+                logger.info(f"Created new Clerk user: {email} with role: {role}")
+            except IntegrityError as ie:
+                db.session.rollback()
+                # User might have been created between query and insert (race condition)
+                # Try to find the user again
+                user = User.query.filter(
+                    (User.clerk_id == clerk_id) | (func.lower(User.email) == email.lower())
+                ).first()
+                if user:
+                    logger.info(f"User {email} was created concurrently, using existing user")
+                    # Update clerk_id if needed
+                    if not user.clerk_id and clerk_id:
+                        user.clerk_id = clerk_id
+                        try:
+                            db.session.commit()
+                        except IntegrityError:
+                            db.session.rollback()
+                else:
+                    logger.error(f"Database integrity error creating user: {ie}")
+                    return jsonify({"msg": "Database error: Unable to create user account. Email or Clerk ID may already be in use."}), 500
         
         # 6. Generate Flask JWT for API calls
         additional_claims = {
@@ -798,9 +855,13 @@ def clerk_sync():
         }), 200
         
     except Exception as e:
-        logger.error(f"Clerk sync error: {e}")
+        import traceback
+        error_traceback = traceback.format_exc()
+        logger.error(f"Clerk sync error: {e}\n{error_traceback}")
         db.session.rollback()
-        return jsonify({"msg": "An unexpected error occurred during authentication"}), 500
+        # Return more detailed error in development, generic in production
+        error_msg = str(e) if app.config.get('DEBUG', False) else "An unexpected error occurred during authentication"
+        return jsonify({"msg": error_msg}), 500
 
 
 @app.route('/api/webhooks/clerk', methods=['POST'])
