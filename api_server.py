@@ -75,14 +75,14 @@ if not app.config['JWT_SECRET_KEY']:
     raise ValueError("No SECRET_KEY set for Flask application. Please set it in .env file.")
 
 # Initialize Extensions
-db.init_app(app)
-migrate = Migrate(app, db) # Architecture: Enable database migrations
-jwt = JWTManager(app)
+db.init_app(app)  # type: ignore[arg-type]
+migrate = Migrate(app, db)  # type: ignore[arg-type] # Architecture: Enable database migrations
+jwt = JWTManager(app)  # type: ignore[arg-type]
 
 # Security: Rate Limiting
 limiter = Limiter(
     get_remote_address,
-    app=app,
+    app=app,  # type: ignore[arg-type]
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
@@ -413,6 +413,8 @@ def get_garments():
 @limiter.limit("10 per minute")
 def generate_on_demand():
     data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "Request body is required"}), 400
     fabric_ref = data.get('fabric_ref')
     mockup_name = data.get('mockup_name')
     
@@ -568,6 +570,8 @@ def manage_fabric(fabric_id):
             })
         elif request.method == 'PUT':
             data = request.json
+            if not data:
+                return jsonify({"error": "Request body is required"}), 400
             if 'status' in data: fabric.status = data['status']
             if 'manufacturer_id' in data: fabric.manufacturer_id = data['manufacturer_id']
             if 'meta_data' in data: fabric.meta_data = data['meta_data']
@@ -579,6 +583,8 @@ def manage_fabric(fabric_id):
             db.session.delete(fabric)
             db.session.commit()
             return jsonify({"success": True, "message": "Fabric deleted"})
+        else:
+            return jsonify({"error": "Method not allowed"}), 405
     except Exception as e:
         logger.error(f"Error managing fabric {fabric_id}: {e}")
         db.session.rollback()
@@ -599,6 +605,8 @@ def get_mills():
 @limiter.limit("5 per minute")
 def signup():
     data = request.json
+    if not data:
+        return jsonify({"msg": "Request body is required"}), 400
     email = data.get('email')
     password = data.get('password')
     requested_role = data.get('role', 'buyer')
@@ -617,7 +625,12 @@ def signup():
         return jsonify({"msg": "Email already exists"}), 400
     
     hashed_password = generate_password_hash(password)
-    new_user = User(email=email, password_hash=hashed_password, role=role, company_name=company_name)
+    new_user = User(  # type: ignore
+        email=email,  # type: ignore
+        password_hash=hashed_password,  # type: ignore
+        role=role,  # type: ignore
+        company_name=company_name  # type: ignore
+    )
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"message": "User created successfully", "user_id": new_user.id, "role": role}), 201
@@ -846,14 +859,14 @@ def clerk_sync():
                 return jsonify({"msg": "Database error: Unable to update user account"}), 500
         else:
             # Create new user
-            user = User(
-                email=email,
-                clerk_id=clerk_id,
-                role=role,
-                company_name=company_name,
-                approval_status=approval_status,
-                is_verified_buyer=is_verified_buyer,
-                password_hash=None  # Clerk users don't have local passwords
+            user = User(  # type: ignore
+                email=email,  # type: ignore
+                clerk_id=clerk_id,  # type: ignore
+                role=role,  # type: ignore
+                company_name=company_name,  # type: ignore
+                approval_status=approval_status,  # type: ignore
+                is_verified_buyer=is_verified_buyer,  # type: ignore
+                password_hash=None  # type: ignore # Clerk users don't have local passwords
             )
             db.session.add(user)
             try:
@@ -943,6 +956,9 @@ def clerk_webhook():
             signed_content = f"{svix_id}.{svix_timestamp}.{payload}"
             
             # Get the expected signature (format: v1,<base64_signature>)
+            if not svix_signature:
+                logger.warning("Clerk webhook missing svix-signature")
+                return jsonify({"msg": "Missing webhook signature"}), 400
             expected_signatures = svix_signature.split(' ')
             signature_valid = False
             
@@ -976,6 +992,8 @@ def clerk_webhook():
         
         # Parse webhook payload
         data = request.json
+        if not data:
+            return jsonify({"msg": "Request body is required"}), 400
         event_type = data.get('type')
         
         if event_type == 'user.created':
@@ -1005,13 +1023,13 @@ def clerk_webhook():
                 email_domain = get_email_domain(email)
                 is_verified = email_domain in ALLOWED_DOMAINS
                 
-                new_user = User(
-                    email=email,
-                    clerk_id=clerk_id,
-                    role='buyer' if is_verified else 'general_user',
-                    approval_status='none',
-                    is_verified_buyer=is_verified,
-                    password_hash=None
+                new_user = User(  # type: ignore
+                    email=email,  # type: ignore
+                    clerk_id=clerk_id,  # type: ignore
+                    role='buyer' if is_verified else 'general_user',  # type: ignore
+                    approval_status='none',  # type: ignore
+                    is_verified_buyer=is_verified,  # type: ignore
+                    password_hash=None  # type: ignore
                 )
                 db.session.add(new_user)
                 db.session.commit()
@@ -1021,8 +1039,8 @@ def clerk_webhook():
         
         elif event_type == 'user.deleted':
             # Optionally handle user deletion
-            user_data = data.get('data', {})
-            clerk_id = user_data.get('id')
+            user_data = data.get('data', {}) if data else {}
+            clerk_id = user_data.get('id') if user_data else None
             
             if clerk_id:
                 user = User.query.filter_by(clerk_id=clerk_id).first()
@@ -1132,6 +1150,8 @@ def manage_domains():
         
         elif request.method == 'POST':
             data = request.json
+            if not data:
+                return jsonify({"error": "Request body is required"}), 400
             domains = data.get('domains', [])
             
             # Write to file
@@ -1145,6 +1165,8 @@ def manage_domains():
             load_allowed_domains()
             
             return jsonify({"success": True, "count": len(ALLOWED_DOMAINS)})
+        else:
+            return jsonify({"error": "Method not allowed"}), 405
             
     except Exception as e:
         logger.error(f"Error managing domains: {e}")
@@ -1179,11 +1201,11 @@ def create_admin():
     
     # Create new admin user
     hashed_password = generate_password_hash(admin_password)
-    admin_user = User(
-        email=admin_email,
-        password_hash=hashed_password,
-        role='admin',
-        company_name=admin_company
+    admin_user = User(  # type: ignore
+        email=admin_email,  # type: ignore
+        password_hash=hashed_password,  # type: ignore
+        role='admin',  # type: ignore
+        company_name=admin_company  # type: ignore
     )
     db.session.add(admin_user)
     db.session.commit()
