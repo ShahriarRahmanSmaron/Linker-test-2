@@ -38,6 +38,7 @@ services:
       - ./generated_techpacks:/app/generated_techpacks
       - ./techpack_templates:/app/techpack_templates
       - ./images:/app/images
+      - ./migrate_sqlite_to_postgres.py:/app/migrate_sqlite_to_postgres.py
     ports:
       - "5000:5000"
     depends_on:

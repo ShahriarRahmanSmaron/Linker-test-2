@@ -124,4 +124,4 @@ migrations/versions/__pycache__/
 .flake8
 create_admin_script.py
 verify_db.py
-migrate_sqlite_to_postgres.py
+
