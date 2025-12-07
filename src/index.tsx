@@ -5,10 +5,11 @@ import './index.css';
 import App from './App';
 
 // Clerk publishable key from environment variables
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const rawPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = typeof rawPublishableKey === 'string' ? rawPublishableKey.trim() : '';
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
+if (!PUBLISHABLE_KEY || !PUBLISHABLE_KEY.startsWith('pk_')) {
+  throw new Error('Missing or invalid VITE_CLERK_PUBLISHABLE_KEY environment variable');
 }
 
 const rootElement = document.getElementById('root');
