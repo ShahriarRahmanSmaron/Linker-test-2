@@ -11,17 +11,17 @@ python-dotenv
 flask>=2.3.0
 flask-cors>=4.0.0
 flask-sqlalchemy
-flask-jwt-extended
+# flask-jwt-extended removed - using Supabase JWT verification instead
 flask-migrate
 flask-limiter
 rich  # Required by flask-limiter CLI
 werkzeug
 psycopg2-binary
 
-# Clerk JWT Verification
-PyJWT>=2.8.0
-cryptography>=41.0.0  # Required for RS256 algorithm
-requests>=2.31.0  # For calling Clerk API
+# Supabase Integration
+supabase>=2.0.0
+PyJWT>=2.8.0  # For Supabase JWT verification
+requests>=2.31.0  # For Supabase API calls
 
 # Production WSGI Server
 gunicorn>=21.0.0

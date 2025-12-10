@@ -148,6 +148,29 @@ export const AdminDashboard: React.FC = () => {
   const [data] = useState<AdminDashboardData>(MOCK_DATA);
   const [activeView, setActiveView] = useState<DashboardView>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // SECURITY: Secondary check - redirect non-admins immediately
+  // This is a defense-in-depth measure in case ProtectedRoute is bypassed
+  React.useEffect(() => {
+    if (user && user.role !== 'admin') {
+      console.error(`[SECURITY] Non-admin user "${user.email}" attempted to access admin dashboard`);
+      navigate('/buyer-dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Don't render admin content for non-admins
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-neutral-900 mb-2">Access Denied</h1>
+          <p className="text-neutral-600 mb-4">You don't have permission to access this page.</p>
+          <Button onClick={() => navigate('/')}>Go to Home</Button>
+        </div>
+      </div>
+    );
+  }
   const [actionCenterTab, setActionCenterTab] = useState<'rfqs' | 'fabrics'>('rfqs');
   const [messageTab, setMessageTab] = useState<'buyers' | 'manufacturers'>('buyers');
 

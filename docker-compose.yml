@@ -1,23 +1,21 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: linker_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-linker}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-linker_secure_password}
-      POSTGRES_DB: ${POSTGRES_DB:-linker_db}
+  # Frontend build service
+  frontend-build:
+    image: node:20-alpine
+    container_name: linker_frontend_build
+    working_dir: /app
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-linker} -d ${POSTGRES_DB:-linker_db}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run build"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api}
+    profiles:
+      - build
 
   backend:
     build: .
@@ -26,7 +24,13 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-linker}:${POSTGRES_PASSWORD:-linker_secure_password}@postgres:5432/${POSTGRES_DB:-linker_db}
+      # Use Supabase database URL from environment
+      DATABASE_URL: ${DATABASE_URL}
+      # Supabase configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
     volumes:
       - ./instance:/app/instance
       - ./fabric_swatches:/app/fabric_swatches
@@ -38,12 +42,17 @@ services:
       - ./generated_techpacks:/app/generated_techpacks
       - ./techpack_templates:/app/techpack_templates
       - ./images:/app/images
-      - ./migrate_sqlite_to_postgres.py:/app/migrate_sqlite_to_postgres.py
+      # Mount SQL files for database setup
+      - ./supabase_setup_complete.sql:/app/supabase_setup_complete.sql
+      - ./supabase_security_fixes.sql:/app/supabase_security_fixes.sql
     ports:
       - "5000:5000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   caddy:
     image: caddy:alpine
@@ -52,6 +61,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-:80}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./dist:/srv
@@ -67,6 +78,5 @@ services:
       - backend
 
 volumes:
-  postgres_data:
   caddy_data:
   caddy_config:

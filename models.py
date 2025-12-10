@@ -5,12 +5,12 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Clerk users
+    password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Supabase auth users, required for admin
     role = db.Column(db.String(20), default='general_user')  # buyer, manufacturer, admin, general_user
     company_name = db.Column(db.String(100))
     
-    # Clerk Integration Fields
-    clerk_id = db.Column(db.String(255), unique=True, nullable=True)  # Links to Clerk user, null for legacy admins
+    # Supabase Integration Fields
+    supabase_uid = db.Column(db.String(36), unique=True, nullable=True)  # UUID linking to auth.users.id
     approval_status = db.Column(db.String(20), default='none')  # pending, approved, rejected, none
     is_verified_buyer = db.Column(db.Boolean, default=False)  # True if email domain matched whitelist
     

@@ -1,6 +1,7 @@
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+import { supabase } from './supabase';
+
+// Use relative path to leverage Vite proxy, or VITE_API_URL if set
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface FetchOptions extends RequestInit {
     headers?: Record<string, string>;
@@ -8,7 +9,9 @@ interface FetchOptions extends RequestInit {
 
 export const api = {
     async request(endpoint: string, options: FetchOptions = {}) {
-        const token = localStorage.getItem('token');
+        // Get Supabase JWT token
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
 
         const headers = {
             'Content-Type': 'application/json',
@@ -22,10 +25,11 @@ export const api = {
         });
 
         if (response.status === 401) {
-            // Token expired or invalid
-            localStorage.removeItem('token');
-            // Ideally redirect to login, but we'll let the app handle auth state changes
-            window.location.href = '/login';
+            // Token expired or invalid - sign out from Supabase
+            await supabase.auth.signOut();
+            // Redirect to appropriate login page based on current URL
+            const isAdminRoute = window.location.pathname.startsWith('/admin');
+            window.location.href = isAdminRoute ? '/admin-login' : '/login';
         }
 
         return response;

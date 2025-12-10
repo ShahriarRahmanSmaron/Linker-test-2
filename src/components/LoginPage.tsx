@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { SignIn, SignUp, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { User, Building2, ArrowLeft } from 'lucide-react';
+import { User, Building2, ArrowLeft, Mail, Lock } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -9,12 +8,14 @@ import { toast } from 'sonner';
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { syncClerkUser, user, isLoading } = useAuth();
-    const { isSignedIn, isLoaded: clerkLoaded } = useClerkAuth();
+    const { signUp, signIn, user, isLoading } = useAuth();
 
     const [role, setRole] = useState<'buyer' | 'manufacturer'>('buyer');
     const [isSignUp, setIsSignUp] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [companyName, setCompanyName] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Get role from URL params
     useEffect(() => {
@@ -30,38 +31,6 @@ export const LoginPage: React.FC = () => {
             setIsSignUp(true);
         }
     }, [searchParams]);
-
-    // After Clerk sign-in, sync with backend
-    useEffect(() => {
-        const handleClerkSignIn = async () => {
-            if (clerkLoaded && isSignedIn && !user && !isSyncing) {
-                setIsSyncing(true);
-                try {
-                    const syncedUser = await syncClerkUser(role, '');
-                    if (syncedUser) {
-                        toast.success("Welcome back!");
-                        // Navigate based on role and approval status
-                        if (syncedUser.role === 'manufacturer') {
-                            if (syncedUser.approval_status === 'approved') {
-                                navigate('/manufacturer-dashboard');
-                            } else {
-                                navigate('/approval-pending');
-                            }
-                        } else if (syncedUser.role === 'buyer' || syncedUser.role === 'general_user') {
-                            navigate('/buyer-dashboard');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Sync failed:', error);
-                    toast.error("Failed to sync account.");
-                } finally {
-                    setIsSyncing(false);
-                }
-            }
-        };
-
-        handleClerkSignIn();
-    }, [clerkLoaded, isSignedIn, user, syncClerkUser, role, navigate]);
 
     // Already logged in - redirect
     useEffect(() => {
@@ -80,7 +49,28 @@ export const LoginPage: React.FC = () => {
         }
     }, [user, isLoading, navigate]);
 
-    if (isLoading || !clerkLoaded || isSyncing) {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            if (isSignUp) {
+                await signUp(email, password, role, companyName);
+                // After signup, user needs to verify email
+                toast.info('Please check your email to verify your account before signing in.');
+            } else {
+                await signIn(email, password);
+                // Navigation will happen automatically via useEffect when user state updates
+            }
+        } catch (error: any) {
+            console.error('Auth error:', error);
+            // Error toast is handled in AuthContext
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (isLoading) {
         return (
             <div className="min-h-screen w-full flex items-center justify-center bg-neutral-50">
                 <div className="flex flex-col items-center gap-4">
@@ -90,57 +80,11 @@ export const LoginPage: React.FC = () => {
         );
     }
 
-    // Custom Light Theme for Clerk
-    const clerkAppearance = {
-        layout: {
-            socialButtonsPlacement: 'top',
-            socialButtonsVariant: 'iconButton',
-            showOptionalFields: false,
-        },
-        variables: {
-            borderRadius: '0.5rem',
-            colorPrimary: '#334155', // Slate 700 - Matching the sage/blue theme
-            colorBackground: '#ffffff',
-            colorInputBackground: '#F8FAFC', // Slate 50
-            colorInputText: '#0F172A', // Slate 900
-            colorText: '#0F172A', // Slate 900
-            colorTextSecondary: '#64748B', // Slate 500
-            fontFamily: 'inherit',
-        },
-        elements: {
-            // Main Card
-            card: "shadow-none bg-transparent w-full",
-            rootBox: "w-full",
-            headerTitle: "hidden", // Hide default Clerk header to use our custom one
-            headerSubtitle: "hidden",
-
-            // Social Buttons
-            socialButtonsIconButton: "bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full h-12 w-full mx-1",
-            socialButtonsProviderIcon: "opacity-90",
-
-            // Inputs
-            formFieldLabel: "text-slate-700 text-sm font-medium ml-1 mb-1.5",
-            formFieldInput: "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-slate-500/20 transition-all h-11",
-
-            // Primary Button
-            formButtonPrimary: "bg-slate-700 hover:bg-slate-800 text-white normal-case font-medium rounded-full h-12 shadow-lg shadow-slate-700/20",
-
-            // Footer
-            footerActionLink: "text-slate-700 hover:text-slate-900 font-medium",
-            footer: "hidden", // Hide default footer to make it cleaner
-
-            // Dividers
-            dividerLine: "bg-slate-200",
-            dividerText: "text-slate-400 uppercase text-xs tracking-wider",
-        }
-    };
-
     return (
         <div 
             className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #C1E1C1 0%, #A7C7E7 100%)' }}
         >
-            
             {/* Minimalistic Card */}
             <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-12 w-full max-w-[480px] relative z-10">
                 
@@ -154,7 +98,12 @@ export const LoginPage: React.FC = () => {
                             ? 'Already have an account? '
                             : 'New to Linker? '}
                         <button 
-                            onClick={() => setIsSignUp(!isSignUp)} 
+                            onClick={() => {
+                                setIsSignUp(!isSignUp);
+                                setEmail('');
+                                setPassword('');
+                                setCompanyName('');
+                            }}
                             className="text-slate-900 font-semibold hover:underline transition-all"
                         >
                             {isSignUp ? 'Log in' : 'Sign up'}
@@ -205,22 +154,81 @@ export const LoginPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Clerk Component */}
-                <div className="w-full">
-                    {isSignUp ? (
-                        <SignUp 
-                            appearance={clerkAppearance as any}
-                            redirectUrl={role === 'manufacturer' ? '/approval-pending' : '/buyer-dashboard'}
-                            signInUrl={`/login?mode=login&role=${role}`}
-                        />
-                    ) : (
-                        <SignIn 
-                            appearance={clerkAppearance as any}
-                            redirectUrl={role === 'manufacturer' ? '/manufacturer-dashboard' : '/buyer-dashboard'}
-                            signUpUrl={`/login?mode=signup&role=${role}`}
-                        />
+                {/* Custom Form */}
+                <form onSubmit={handleSubmit} className="w-full space-y-4">
+                    {/* Email Field */}
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+                            Email
+                        </label>
+                        <div className="relative">
+                            <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
+                                placeholder="you@example.com"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Password Field */}
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Company Name (for signup) */}
+                    {isSignUp && (
+                        <div>
+                            <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+                                Company Name {role === 'manufacturer' && '(Optional)'}
+                            </label>
+                            <input
+                                id="companyName"
+                                type="text"
+                                value={companyName}
+                                onChange={(e) => setCompanyName(e.target.value)}
+                                required={role === 'buyer'}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
+                                placeholder="Your Company"
+                            />
+                        </div>
                     )}
-                </div>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-full h-12 shadow-lg shadow-slate-700/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                {isSignUp ? 'Creating account...' : 'Signing in...'}
+                            </span>
+                        ) : (
+                            isSignUp ? 'Create account' : 'Sign in'
+                        )}
+                    </button>
+                </form>
 
                 {/* Back to Home */}
                 <div className="mt-6 md:mt-8 pt-6 border-t border-slate-100 text-center">

@@ -1,15 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ClerkProvider } from '@clerk/clerk-react';
 import './index.css';
 import App from './App';
 
-// Clerk publishable key from environment variables
-const rawPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const PUBLISHABLE_KEY = typeof rawPublishableKey === 'string' ? rawPublishableKey.trim() : '';
+// Supabase configuration from environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!PUBLISHABLE_KEY || !PUBLISHABLE_KEY.startsWith('pk_')) {
-  throw new Error('Missing or invalid VITE_CLERK_PUBLISHABLE_KEY environment variable');
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables');
 }
 
 const rootElement = document.getElementById('root');
@@ -20,8 +19,6 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <App />
-    </ClerkProvider>
+    <App />
   </React.StrictMode>
 );

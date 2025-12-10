@@ -55,7 +55,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LightModeWrapper><LoginPage /></LightModeWrapper>} />
       
-      {/* Admin Login - Legacy auth (separate from Clerk) */}
+      {/* Admin Login - Password-based auth (separate from Supabase) */}
       <Route path="/admin-login" element={<LightModeWrapper><AdminLoginPage /></LightModeWrapper>} />
 
       {/* Manufacturer Approval Pending Page */}

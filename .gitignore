@@ -65,11 +65,24 @@ dist/
 # IDE
 .cursor/
 
-# Local screenshots/images
+# Local screenshots/images (but keep public assets)
+# Ignore PNGs except in public and src directories
 *.png
+!public/**/*.png
+!src/**/*.png
 
 # Local scripts
 start_server.ps1
 
 # Documentation
-*.md
+# Ignore auto-generated docs but keep important ones
+.cursor/plans/*.md
+# Note: Keep supabase.md, GCP.md, README.md tracked
+
+# Data files (may contain sensitive information)
+Excel_files/
+*.xlsx
+*.xls
+
+# User-generated content
+silhouettes/

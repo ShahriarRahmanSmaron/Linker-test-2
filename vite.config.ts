@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
-      allowedHosts: ['136.111.175.251.nip.io', 'localhost'],
+      allowedHosts: ['www.linkersource.app', 'linkersource.app', '136.111.175.251.nip.io', 'localhost'],
       proxy: {
         '/api': {
           target: 'http://localhost:5000',

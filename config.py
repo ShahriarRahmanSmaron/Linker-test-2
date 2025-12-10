@@ -73,14 +73,13 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = Field(default="admin@linker.app", description="Admin email address")
     ADMIN_PASSWORD: str = Field(..., description="Admin password")
     MASCO_PASSWORD: str = Field(default="masco123", description="Masco manufacturer user password")
-    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,http://13.203.231.247", description="Comma-separated list of allowed CORS origins")
+    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,https://www.linkersource.app,https://linkersource.app,http://136.111.175.251", description="Comma-separated list of allowed CORS origins")
     
-    # ===== Clerk Authentication Settings =====
-    # IMPORTANT: Set CLERK_JWKS_URL to your Clerk instance's JWKS endpoint
-    # Format: https://<your-subdomain>.clerk.accounts.dev/.well-known/jwks.json
-    CLERK_SECRET_KEY: str = Field(default="", description="Clerk secret key for backend JWT verification")
-    CLERK_WEBHOOK_SECRET: str = Field(default="", description="Clerk webhook signing secret for signature verification")
-    CLERK_JWKS_URL: str = Field(default="", description="Clerk JWKS URL - REQUIRED for Clerk auth to work")
+    # ===== Supabase Authentication Settings =====
+    SUPABASE_URL: str = Field(..., description="Supabase project URL (e.g., https://your-project.supabase.co)")
+    SUPABASE_ANON_KEY: str = Field(..., description="Supabase anonymous key for client-side operations")
+    SUPABASE_SERVICE_ROLE_KEY: str = Field(..., description="Supabase service role key for backend operations")
+    SUPABASE_JWT_SECRET: str = Field(..., description="Supabase JWT secret for token verification")
     
     @field_validator("OUTPUT_FORMAT")
     @classmethod

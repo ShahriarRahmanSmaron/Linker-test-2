@@ -85,6 +85,7 @@ linker-key-new.pem
 *.md
 *.png
 *.txt
+*.sql
 !requirements.txt
 1st page.png
 2nd page.png

@@ -40,12 +40,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // 2. Build list of allowed roles
   const rolesAllowed: AllowedRole[] = allowedRoles || (allowedRole ? [allowedRole] : []);
   
-  // 3. Check if user's role is allowed
-  if (rolesAllowed.length > 0 && !rolesAllowed.includes(user.role as AllowedRole)) {
+  // 3. Check if user's role is allowed (strict check)
+  // SECURITY: Explicit role validation - must be a valid role string
+  const userRole = user.role;
+  const isValidRole = userRole && typeof userRole === 'string' && ['admin', 'manufacturer', 'buyer', 'general_user'].includes(userRole);
+  
+  if (!isValidRole) {
+    console.error(`[SECURITY] Invalid user role detected: "${userRole}" for user ${user.email}`);
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (rolesAllowed.length > 0 && !rolesAllowed.includes(userRole as AllowedRole)) {
+    // SECURITY: Log unauthorized access attempts
+    console.warn(`[SECURITY] Access denied: User "${user.email}" (role: ${userRole}) tried to access ${location.pathname} (allowed: ${rolesAllowed.join(', ')})`);
+    
     // Redirect based on user's actual role
-    if (user.role === 'admin') {
+    if (userRole === 'admin') {
       return <Navigate to="/admin" replace />;
-    } else if (user.role === 'manufacturer') {
+    } else if (userRole === 'manufacturer') {
       if (user.approval_status === 'approved') {
         return <Navigate to="/manufacturer-dashboard" replace />;
       } else {

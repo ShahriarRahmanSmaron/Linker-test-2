@@ -13,7 +13,7 @@ interface UserData {
   company_name: string | null;
   approval_status: string;
   is_verified_buyer: boolean;
-  has_clerk_id: boolean;
+  has_supabase_uid: boolean;
 }
 
 export const UserManagement: React.FC = () => {
@@ -262,9 +262,9 @@ export const UserManagement: React.FC = () => {
                         Verified Domain
                       </span>
                     )}
-                    {user.has_clerk_id && (
+                    {user.has_supabase_uid && (
                       <span className="px-2 py-1 text-xs font-medium rounded-full bg-violet-50 text-violet-700 border border-violet-200">
-                        Clerk User
+                        Supabase User
                       </span>
                     )}
                   </div>

@@ -3,7 +3,12 @@
     order handle before try_files
 }
 
-:80 {
+# Redirect non-www to www
+linkersource.app {
+    redir https://www.linkersource.app{uri} permanent
+}
+
+www.linkersource.app {
     root * /srv
     encode gzip
 
