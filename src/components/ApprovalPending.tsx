@@ -27,7 +27,7 @@ export const ApprovalPending: React.FC = () => {
             {/* Content Card */}
             <div className="relative z-10 w-full max-w-lg px-6">
                 <div className="bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden p-8 md:p-12 ring-1 ring-white/60">
-                    
+
                     {/* Icon */}
                     <div className="flex justify-center mb-6">
                         <div className="relative">
@@ -47,7 +47,7 @@ export const ApprovalPending: React.FC = () => {
 
                     {/* Description */}
                     <p className="text-neutral-600 text-center mb-8 leading-relaxed">
-                        Thank you for registering as a manufacturer on LinkER. 
+                        Thank you for registering as a manufacturer on Fab-Ai.
                         Our team is reviewing your application and will get back to you shortly.
                     </p>
 
@@ -116,8 +116,8 @@ export const ApprovalPending: React.FC = () => {
                     <div className="mt-6 text-center">
                         <p className="text-xs text-neutral-500">
                             Questions? Contact us at{' '}
-                            <a href="mailto:support@linker.app" className="text-primary-600 hover:underline font-medium">
-                                support@linker.app
+                            <a href="mailto:support@fab-ai.co" className="text-primary-600 hover:underline font-medium">
+                                support@fab-ai.co
                             </a>
                         </p>
                     </div>

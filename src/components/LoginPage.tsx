@@ -82,13 +82,13 @@ export const LoginPage: React.FC = () => {
     }
 
     return (
-        <div 
+        <div
             className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #C1E1C1 0%, #A7C7E7 100%)' }}
         >
             {/* Minimalistic Card */}
             <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-12 w-full max-w-[480px] relative z-10">
-                
+
                 {/* Header */}
                 <div className="text-center mb-6 md:mb-8">
                     <h1 className="text-xl md:text-2xl font-bold tracking-tight mb-2 text-slate-900">
@@ -97,8 +97,8 @@ export const LoginPage: React.FC = () => {
                     <p className="text-slate-500 text-sm">
                         {isSignUp
                             ? 'Already have an account? '
-                            : 'New to Linker? '}
-                        <button 
+                            : 'New to Fab-Ai? '}
+                        <button
                             onClick={() => {
                                 setIsSignUp(!isSignUp);
                                 setEmail('');

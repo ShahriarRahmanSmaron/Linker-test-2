@@ -22,7 +22,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                     {children}
 
                     <div className="mt-12 text-center text-xs text-neutral-400">
-                        <p>&copy; {new Date().getFullYear()} LinkER. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} Fab-Ai. All rights reserved.</p>
                     </div>
                 </div>
             </div>

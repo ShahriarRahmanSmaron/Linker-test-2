@@ -2,7 +2,7 @@
 set -e
 
 echo "========================================"
-echo "LinkER Backend - Container Startup"
+echo "Fab-Ai Backend - Container Startup"
 echo "========================================"
 
 # Check if Supabase environment variables are set

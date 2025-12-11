@@ -28,5 +28,5 @@ fi
 # --timeout 120: Gives workers 120 seconds to finish (crucial for image generation/mockups)
 # --access-logfile -: Logs access to console (useful for debugging via systemd logs)
 
-echo "Starting LinkER Production Server..."
+echo "Starting Fab-Ai Production Server..."
 exec gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --access-logfile - api_server:app

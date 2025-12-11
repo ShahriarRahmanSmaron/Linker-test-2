@@ -35,30 +35,26 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out ${
-        isScrolled 
-          ? 'bg-white/80 backdrop-blur-lg shadow-sm py-3 border-b border-neutral-200/50' 
-          : 'bg-transparent py-5'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out ${isScrolled
+        ? 'bg-white/80 backdrop-blur-lg shadow-sm py-3 border-b border-neutral-200/50'
+        : 'bg-transparent py-5'
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className={`backdrop-blur-sm p-1.5 rounded-lg mr-2 transition-colors ${
-              isScrolled 
-                ? 'bg-primary-50/80 dark:bg-primary-50/80 group-hover:bg-primary-100 dark:group-hover:bg-primary-100' 
-                : 'bg-primary-50/80 dark:bg-white/10 group-hover:bg-primary-100 dark:group-hover:bg-white/20'
-            }`}>
-                <Layers className={`h-6 w-6 transition-colors ${
-                  isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-white'
+            <div className={`backdrop-blur-sm p-1.5 rounded-lg mr-2 transition-colors ${isScrolled
+              ? 'bg-primary-50/80 dark:bg-primary-50/80 group-hover:bg-primary-100 dark:group-hover:bg-primary-100'
+              : 'bg-primary-50/80 dark:bg-white/10 group-hover:bg-primary-100 dark:group-hover:bg-white/20'
+              }`}>
+              <Layers className={`h-6 w-6 transition-colors ${isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-white'
                 }`} />
             </div>
-            <span className={`text-xl font-extrabold tracking-tight transition-colors ${
-              isScrolled ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
-            }`}>
-              <span className={isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-primary-300'}>Link</span>
-              <span className={isScrolled ? 'text-accent-500' : 'text-accent-500 dark:text-accent-400'}>ER</span>
+            <span className={`text-xl font-extrabold tracking-tight transition-colors ${isScrolled ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
+              }`}>
+              <span className={isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-primary-300'}>Fab</span>
+              <span className={isScrolled ? 'text-accent-500' : 'text-accent-500 dark:text-accent-400'}>-Ai</span>
             </span>
           </div>
 
@@ -68,11 +64,10 @@ export const Navbar: React.FC = () => {
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isScrolled 
-                    ? 'text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400' 
-                    : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
-                }`}
+                className={`text-sm font-medium transition-colors duration-200 ${isScrolled
+                  ? 'text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400'
+                  : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
+                  }`}
               >
                 {link.label}
               </button>
@@ -96,11 +91,10 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Menu Toggle */}
           <div className="md:hidden">
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`transition-colors ${
-              isScrolled 
-                ? 'text-neutral-500 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400' 
-                : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
-            }`}>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`transition-colors ${isScrolled
+              ? 'text-neutral-500 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400'
+              : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
+              }`}>
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -108,37 +102,39 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-t border-neutral-200 dark:border-neutral-800 absolute w-full shadow-xl">
-          <div className="px-4 pt-2 pb-6 space-y-1">
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => handleNavClick(link.id)}
-                className="block w-full text-left px-3 py-3 text-base font-medium text-neutral-600 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg transition-colors"
-              >
-                {link.label}
-              </button>
-            ))}
-            <div className="pt-4 space-y-3">
-              <div className="flex items-center justify-between px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Sun size={18} className={theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'} />
-                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Theme</span>
-                  <Moon size={18} className={theme === 'dark' ? 'text-neutral-300' : 'text-neutral-400'} />
+      {
+        isMobileMenuOpen && (
+          <div className="md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-t border-neutral-200 dark:border-neutral-800 absolute w-full shadow-xl">
+            <div className="px-4 pt-2 pb-6 space-y-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => handleNavClick(link.id)}
+                  className="block w-full text-left px-3 py-3 text-base font-medium text-neutral-600 dark:text-neutral-300 hover:bg-primary-50 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg transition-colors"
+                >
+                  {link.label}
+                </button>
+              ))}
+              <div className="pt-4 space-y-3">
+                <div className="flex items-center justify-between px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Sun size={18} className={theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'} />
+                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Theme</span>
+                    <Moon size={18} className={theme === 'dark' ? 'text-neutral-300' : 'text-neutral-400'} />
+                  </div>
+                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
                 </div>
-                <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+                <button
+                  onClick={() => navigate('/login?role=buyer')}
+                  className="w-full bg-primary-500 text-white px-4 py-3 rounded-lg text-base font-bold hover:bg-primary-600 transition-colors shadow-md"
+                >
+                  Explore Fabrics
+                </button>
               </div>
-              <button
-                onClick={() => navigate('/login?role=buyer')}
-                className="w-full bg-primary-500 text-white px-4 py-3 rounded-lg text-base font-bold hover:bg-primary-600 transition-colors shadow-md"
-              >
-                Explore Fabrics
-              </button>
             </div>
           </div>
-        </div>
-      )}
-    </nav>
+        )
+      }
+    </nav >
   );
 };

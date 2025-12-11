@@ -636,7 +636,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-2 bg-red-50 rounded-lg">
                 <Shield className="w-6 h-6 text-red-600" />
               </div>
-              <span className="text-xl font-bold text-neutral-900">LinkER Admin</span>
+              <span className="text-xl font-bold text-neutral-900">Fab-Ai Admin</span>
             </div>
           </div>
         )}
@@ -674,7 +674,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="p-4 border-t border-neutral-200">
             <div className="mb-3 p-3 bg-neutral-50 rounded-lg">
               <p className="text-xs text-neutral-500 mb-1 whitespace-nowrap">Logged in as</p>
-              <p className="text-sm font-semibold text-neutral-900 truncate">{user?.email || 'admin@linker.com'}</p>
+              <p className="text-sm font-semibold text-neutral-900 truncate">{user?.email || 'admin@fab-ai.co'}</p>
             </div>
             <Button
               variant="ghost"
@@ -708,7 +708,7 @@ export const AdminDashboard: React.FC = () => {
                 )}
               </Button>
               <div>
-                <p className="text-sm text-neutral-500">Admin Portal - {user?.email || 'admin@linker.com'}</p>
+                <p className="text-sm text-neutral-500">Admin Portal - {user?.email || 'admin@fab-ai.co'}</p>
               </div>
             </div>
           </div>

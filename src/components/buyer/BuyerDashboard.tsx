@@ -193,7 +193,7 @@ const MOCK_DATA: BuyerDashboardData = {
           subject: "Inquiry about RFQ-2024-99",
           last_message: "Admin: The manufacturer has confirmed they can match that color.",
           status: "UNREAD",
-          recipient: "LINKER_ADMIN"
+          recipient: "FAB_AI_ADMIN"
         }
       ]
     }
@@ -764,7 +764,7 @@ export const BuyerDashboard: React.FC = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-neutral-900 mb-2">Support Inbox</h1>
-              <p className="text-neutral-500">Communicate with LinkER Admin</p>
+              <p className="text-neutral-500">Communicate with Fab-Ai Admin</p>
             </div>
             <div className="space-y-4">
               {data.buyer_dashboard.support_inbox.active_threads.map((thread) => (
@@ -811,7 +811,7 @@ export const BuyerDashboard: React.FC = () => {
               <div className="p-2 bg-primary-50 rounded-lg">
                 <Layers className="w-6 h-6 text-primary-600" />
               </div>
-              <span className="text-xl font-bold text-neutral-900">LinkER</span>
+              <span className="text-xl font-bold text-neutral-900">Fab-Ai</span>
             </div>
           </div>
         )}
@@ -832,8 +832,8 @@ export const BuyerDashboard: React.FC = () => {
                     }
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                      ? 'bg-primary-50 text-primary-700 font-semibold'
-                      : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                    ? 'bg-primary-50 text-primary-700 font-semibold'
+                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                     }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />

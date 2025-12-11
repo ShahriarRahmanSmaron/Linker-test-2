@@ -279,7 +279,7 @@ export const ManufacturerDashboard: React.FC = () => {
     const target = e.target as HTMLElement;
     const isToggleButton = target.closest('[data-sidebar-toggle]');
     const isSidebar = target.closest('[data-sidebar]');
-    
+
     if (!isToggleButton && !isSidebar && sidebarOpen) {
       setSidebarOpen(false);
     }
@@ -434,7 +434,7 @@ export const ManufacturerDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => console.log('Submit bid for', opp.rfq_id)}
                     className="flex items-center gap-2"
                   >
@@ -564,11 +564,10 @@ export const ManufacturerDashboard: React.FC = () => {
                           className={`flex ${msg.sender === 'ME' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              msg.sender === 'ME'
+                            className={`max-w-[80%] rounded-lg p-3 ${msg.sender === 'ME'
                                 ? 'bg-primary-600 text-white'
                                 : 'bg-neutral-100 text-neutral-900'
-                            }`}
+                              }`}
                           >
                             <p className="text-sm">{msg.text}</p>
                           </div>
@@ -594,7 +593,7 @@ export const ManufacturerDashboard: React.FC = () => {
         );
 
       case 'upload-fabric':
-        const filteredFabrics = fabrics.filter(f => 
+        const filteredFabrics = fabrics.filter(f =>
           f.fabricCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
           f.fabricName.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -615,8 +614,8 @@ export const ManufacturerDashboard: React.FC = () => {
                   onSave={(formData) => {
                     if (editingFabric) {
                       // Update existing fabric
-                      setFabrics(fabrics.map(f => 
-                        f.id === editingFabric.id 
+                      setFabrics(fabrics.map(f =>
+                        f.id === editingFabric.id
                           ? { ...f, ...formData, updatedAt: new Date().toISOString() } as ManufacturerFabric
                           : f
                       ));
@@ -681,7 +680,7 @@ export const ManufacturerDashboard: React.FC = () => {
                     onEdit={(fabric) => setEditingFabric(fabric)}
                     onDelete={(id) => setConfirmDialog({ isOpen: true, fabricId: id })}
                     onToggleStatus={(id) => {
-                      setFabrics(fabrics.map(f => 
+                      setFabrics(fabrics.map(f =>
                         f.id === id ? { ...f, isActive: !f.isActive } : f
                       ));
                       setToast({ message: 'Fabric status updated.', type: 'success', visible: true });
@@ -712,7 +711,7 @@ export const ManufacturerDashboard: React.FC = () => {
               <div className="p-2 bg-accent-50 rounded-lg">
                 <Layers className="w-6 h-6 text-accent-600" />
               </div>
-              <span className="text-xl font-bold text-neutral-900">LinkER</span>
+              <span className="text-xl font-bold text-neutral-900">Fab-Ai</span>
             </div>
           </div>
         )}
@@ -732,11 +731,10 @@ export const ManufacturerDashboard: React.FC = () => {
                       setSidebarOpen(false);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                       ? 'bg-primary-50 text-primary-700 font-semibold'
                       : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="whitespace-nowrap">{item.label}</span>
