@@ -591,17 +591,42 @@ def serve_script(): return send_from_directory(PROJECT_ROOT, 'script.js')
 @admin_required()
 def get_admin_fabrics():
     try:
+        # Parameters
         status_filter = request.args.get('status')
+        search_term = request.args.get('search', '').strip()
+        page = request.args.get('page', 1, type=int)
+        page = max(1, page)
+        
+        # Security: Enforce max limit
+        MAX_LIMIT = 100
+        limit = request.args.get('limit', 20, type=int)
+        limit = max(1, min(limit, MAX_LIMIT))
+
         query = Fabric.query
+        
+        # 1. Apply Status Filter
         if status_filter:
             if '|' in status_filter:
                 statuses = status_filter.split('|')
                 query = query.filter(Fabric.status.in_(statuses))
             else:
                 query = query.filter_by(status=status_filter)
-        fabrics = query.order_by(Fabric.id.desc()).limit(100).all()
+        
+        # 2. Apply Search
+        if search_term:
+            term = f"%{search_term}%"
+            query = query.filter(
+                (Fabric.ref.ilike(term)) |
+                (Fabric.fabrication.ilike(term)) |
+                (Fabric.fabric_group.ilike(term))
+            )
+            
+        # 3. Apply Pagination
+        # Use order_by id desc for latest first
+        pagination = query.order_by(Fabric.id.desc()).paginate(page=page, per_page=limit, error_out=False)
+        
         results = []
-        for f in fabrics:
+        for f in pagination.items:
             owner = User.query.get(f.manufacturer_id)
             owner_name = owner.company_name if owner else "Unknown"
             
@@ -617,7 +642,14 @@ def get_admin_fabrics():
                 "meta_data": f.meta_data or {},
                 "swatchUrl": swatch_url
             })
-        return jsonify(results)
+            
+        return jsonify({
+            "results": results,
+            "total": pagination.total,
+            "page": page,
+            "limit": limit,
+            "pages": pagination.pages
+        })
     except Exception as e:
         logger.error(f"Error fetching admin fabrics: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500

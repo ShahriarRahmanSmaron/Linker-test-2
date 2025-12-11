@@ -21,7 +21,12 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
             const response = await api.get('/admin/fabrics?status=PENDING_REVIEW');
             if (response.ok) {
                 const data = await response.json();
-                setFabrics(data);
+                // Handle new paginated response structure
+                if (data.results) {
+                    setFabrics(data.results);
+                } else {
+                    setFabrics(data);
+                }
             } else {
                 toast.error('Failed to fetch staging fabrics');
             }
