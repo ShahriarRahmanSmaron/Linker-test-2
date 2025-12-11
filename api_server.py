@@ -13,7 +13,7 @@ import sys
 import hmac
 import hashlib
 from functools import wraps
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from flask import Flask, request, jsonify, send_from_directory, send_file, abort
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
@@ -25,6 +25,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import pandas as pd
 from PIL import Image as PILImage
+# Security: Limit max image pixels to prevent DoS (DecompressionBomb)
+PILImage.MAX_IMAGE_PIXELS = 100000000  # 100 MP limit
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
@@ -109,10 +111,6 @@ def verify_supabase_jwt(token: str) -> dict:
         raise ValueError("SUPABASE_JWT_SECRET not configured. Set it in your .env file.")
     
     try:
-        # DEBUG: Log token and secret info
-        logger.info(f"JWT verification - Token length: {len(token)}, Secret length: {len(SUPABASE_JWT_SECRET)}")
-        logger.info(f"JWT verification - Secret starts with: {SUPABASE_JWT_SECRET[:10]}...")
-        
         # Decode and verify the token using Supabase JWT secret
         decoded = pyjwt.decode(
             token,
@@ -171,23 +169,16 @@ def get_current_user():
                     return user
             
             # Create new user from JWT claims
-            requested_role = user_metadata.get('requested_role', 'general_user')
-            company_name = user_metadata.get('company_name', '')
+            # IGNORED FOR SECURITY - User metadata is client-writable
+            # requested_role = user_metadata.get('requested_role', 'general_user')
             
-            # Determine role and verification status
-            if requested_role == 'manufacturer':
-                role = 'manufacturer'
-                is_verified_buyer = False
-                approval_status = 'pending'
-            elif requested_role == 'buyer':
-                role = 'buyer'
-                # Check if domain is in allowed_companies (would need to query, but for now default to False)
-                is_verified_buyer = False
-                approval_status = 'none'
-            else:
-                role = 'general_user'
-                is_verified_buyer = False
-                approval_status = 'none'
+            # Still extract company name if provided (safe)
+            company_name = user_metadata.get('company_name', '') 
+            
+            # Force default role for security
+            role = 'general_user'
+            is_verified_buyer = False
+            approval_status = 'none'
             
             try:
                 new_user = User(
@@ -488,6 +479,10 @@ def get_garments():
 @supabase_jwt_required()
 @limiter.limit("10 per minute")
 def generate_on_demand():
+    # Security: Prevent large payloads (DoS)
+    if request.content_length and request.content_length > 10 * 1024 * 1024:  # 10MB limit
+        abort(413)
+        
     data = request.json
     if not data:
         return jsonify({"success": False, "error": "Request body is required"}), 400
@@ -711,66 +706,7 @@ def signup():
     db.session.commit()
     return jsonify({"message": "User created successfully", "user_id": new_user.id, "role": role}), 201
 
-@app.route('/api/auth/login', methods=['POST'])
-@limiter.limit("10 per minute")
-def login():
-    """
-    Admin-only password-based login.
-    For regular users, use Supabase Auth on the frontend.
-    """
-    try:
-        data = request.json
-        if not data:
-            return jsonify({"msg": "Request body is required"}), 400
-            
-        email = data.get('email')
-        password = data.get('password')
-        
-        if not email or not password:
-            return jsonify({"msg": "Email and password are required"}), 400
-        
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({"msg": "Bad email or password"}), 401
-        
-        # Check if user has a password hash (Supabase auth users don't have one)
-        if not user.password_hash:
-            return jsonify({"msg": "Bad email or password"}), 401
-        
-        if not check_password_hash(user.password_hash, password):
-            return jsonify({"msg": "Bad email or password"}), 401
-        
-        # Security: Only allow admins to login via password
-        if user.role != 'admin':
-            return jsonify({"msg": "Access denied. Only admins can login via this endpoint."}), 403
 
-        # For admin login, we still need to return a token
-        # Since we're not using flask-jwt-extended, we'll create a simple session token
-        # or use Supabase to create an admin session token
-        # For now, return user profile (frontend can handle admin session differently)
-        user_profile = {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-            "name": user.company_name or "",
-            "approval_status": getattr(user, 'approval_status', 'none'),
-            "is_verified_buyer": getattr(user, 'is_verified_buyer', False)
-        }
-        
-        # Note: Admin login should ideally use Supabase Auth too, but for backward compatibility
-        # we keep password-based login. The frontend should handle admin sessions appropriately.
-        return jsonify({
-            "user_profile": user_profile,
-            "is_admin": True
-        }), 200
-        
-    except Exception as e:
-        import traceback
-        error_traceback = traceback.format_exc()
-        logger.error(f"Admin login error: {e}\n{error_traceback}")
-        db.session.rollback()
-        error_msg = str(e) if app.config.get('DEBUG', False) else "An unexpected error occurred during login"
-        return jsonify({"msg": error_msg}), 500
 
 @app.route('/api/auth/me', methods=['GET'])
 @supabase_jwt_required()

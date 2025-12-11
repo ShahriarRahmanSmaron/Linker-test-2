@@ -45,8 +45,7 @@ services:
       # Mount SQL files for database setup
       - ./supabase_setup_complete.sql:/app/supabase_setup_complete.sql
       - ./supabase_security_fixes.sql:/app/supabase_security_fixes.sql
-    ports:
-      - "5000:5000"
+      # ports: []  <-- REMOVE THIS SECTION
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health || exit 1"]
       interval: 30s

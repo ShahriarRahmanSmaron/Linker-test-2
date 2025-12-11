@@ -66,13 +66,13 @@ class Settings(BaseSettings):
     # ===== Flask Server Settings =====
     FLASK_HOST: str = Field(default="0.0.0.0", description="Flask server host")
     FLASK_PORT: int = Field(default=5000, ge=1, le=65535, description="Flask server port")
-    FLASK_DEBUG: bool = Field(default=True, description="Flask debug mode")
+    FLASK_DEBUG: bool = Field(default=False, description="Flask debug mode")
 
     # ===== Security Settings =====
     SECRET_KEY: str = Field(..., description="Secret key for Flask session and JWT")
     ADMIN_EMAIL: str = Field(default="admin@linker.app", description="Admin email address")
     ADMIN_PASSWORD: str = Field(..., description="Admin password")
-    MASCO_PASSWORD: str = Field(default="masco123", description="Masco manufacturer user password")
+
     CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,https://www.linkersource.app,https://linkersource.app,http://136.111.175.251", description="Comma-separated list of allowed CORS origins")
     
     # ===== Supabase Authentication Settings =====

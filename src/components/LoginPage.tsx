@@ -56,8 +56,8 @@ export const LoginPage: React.FC = () => {
         try {
             if (isSignUp) {
                 await signUp(email, password, role, companyName);
-                // After signup, user needs to verify email
-                toast.info('Please check your email to verify your account before signing in.');
+                // Note: If user is auto-confirmed, they'll be signed in automatically
+                // Otherwise, they'll need to verify email first
             } else {
                 await signIn(email, password);
                 // Navigation will happen automatically via useEffect when user state updates
@@ -65,6 +65,7 @@ export const LoginPage: React.FC = () => {
         } catch (error: any) {
             console.error('Auth error:', error);
             // Error toast is handled in AuthContext
+            // Additional error handling can be added here if needed
         } finally {
             setIsSubmitting(false);
         }
