@@ -73,7 +73,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = Field(default="admin@linker.app", description="Admin email address")
     ADMIN_PASSWORD: str = Field(..., description="Admin password")
 
-    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,https://www.linkersource.app,https://linkersource.app,http://136.111.175.251", description="Comma-separated list of allowed CORS origins")
+    CORS_ALLOWED_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000,http://localhost:3001,https://www.fab-ai.co,https://fab-ai.co,http://136.111.175.251", description="Comma-separated list of allowed CORS origins")
     
     # ===== Supabase Authentication Settings =====
     SUPABASE_URL: str = Field(..., description="Supabase project URL (e.g., https://your-project.supabase.co)")

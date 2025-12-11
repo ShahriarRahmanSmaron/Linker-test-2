@@ -4,11 +4,12 @@
 }
 
 # Redirect non-www to www
-linkersource.app {
-    redir https://www.linkersource.app{uri} permanent
+# Redirect non-www to www
+fab-ai.co {
+    redir https://www.fab-ai.co{uri} permanent
 }
 
-www.linkersource.app {
+www.fab-ai.co {
     root * /srv
     encode gzip
 

@@ -81,10 +81,18 @@ CREATE POLICY "Users can view own record"
     USING (auth.uid() = supabase_uid);
 
 -- Users can update their own record (limited fields)
-CREATE POLICY "Users can update own record"
+-- Users can update their own record (STRICT: company_name only)
+-- FIXED: Prevent privilege escalation by restricting updateable columns
+CREATE POLICY "Users can update own company_name"
     ON users FOR UPDATE
     USING (auth.uid() = supabase_uid)
     WITH CHECK (auth.uid() = supabase_uid);
+
+-- ENFORCE COLUMN SECURITY (Postgres Level)
+-- Even if RLS passes, deny updates to sensitive columns like 'role'
+-- Note: You must run this in the SQL Editor as it changes permissions
+REVOKE UPDATE ON users FROM authenticated;
+GRANT UPDATE (company_name) ON users TO authenticated;
 
 -- Service role (backend) can do everything
 CREATE POLICY "Service role has full access"
@@ -325,9 +333,12 @@ CREATE TRIGGER trigger_auto_verify_buyer
 ALTER TABLE allowed_companies ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to allowed_companies (needed for trigger)
-CREATE POLICY "Allow public read access to allowed_companies"
-    ON allowed_companies FOR SELECT
-    USING (true);
+-- FIXED: Disable public read access to prevent data leakage
+-- The trigger uses SECURITY DEFINER so it doesn't need this policy.
+-- Only service role (backend) needs access.
+-- CREATE POLICY "Allow public read access to allowed_companies"
+--    ON allowed_companies FOR SELECT
+--    USING (true);
 
 -- Service role has full access
 CREATE POLICY "Service role has full access to allowed_companies"
