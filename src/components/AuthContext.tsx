@@ -42,22 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   // Fetch user profile from backend using Supabase JWT
+  // Note: Token refresh is handled by the api helper to avoid concurrent refreshes
+  // that would trigger Supabase's replay attack detection
   const fetchUserProfile = async (session: Session): Promise<User | null> => {
     try {
-      const access_token = session.access_token;
-      
-      // Use relative path to leverage Vite proxy, or VITE_API_URL if set
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(
-        `${apiUrl}/auth/me`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${access_token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // Use the api helper which handles token refresh properly
+      const response = await api.get('/auth/me');
 
       if (response.ok) {
         const userData = await response.json();
@@ -66,12 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const errorData = await response.json().catch(() => ({ msg: 'Unknown error' }));
         console.error('Failed to fetch user profile:', errorData);
         
-        // Show user-friendly error message
-        if (response.status === 401) {
-          toast.error('Authentication failed. Please try logging in again.');
-        } else if (response.status === 404) {
+        // Show user-friendly error message (only for non-401, as api helper handles 401)
+        if (response.status === 404) {
           toast.error('User profile not found. Please contact support.');
-        } else {
+        } else if (response.status !== 401) {
           toast.error(errorData.msg || 'Failed to load user profile');
         }
         
