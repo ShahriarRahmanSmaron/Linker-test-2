@@ -61,12 +61,11 @@ cors_origins = settings.CORS_ALLOWED_ORIGINS.split(',')
 CORS(app, resources={r"/*": {"origins": cors_origins}}, supports_credentials=True)
 
 # Database Configuration
-# Production: Use DATABASE_URL env var (PostgreSQL recommended for concurrency)
-# Development: Falls back to SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL', 
-    f"sqlite:///{os.path.join(PROJECT_ROOT, 'instance', 'fabric_sourcing.db')}"
-)
+# Use Supabase PostgreSQL via DATABASE_URL env var (required)
+database_url = os.getenv('DATABASE_URL')
+if not database_url:
+    raise ValueError("DATABASE_URL environment variable is required. Please set it in your .env file.")
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize Extensions
@@ -172,7 +171,8 @@ def get_current_user():
             # IGNORED FOR SECURITY - User metadata is client-writable
             # requested_role = user_metadata.get('requested_role', 'general_user')
             
-            # Still extract company name if provided (safe)
+            # Extract name and company_name if provided (safe)
+            name = user_metadata.get('name', '')
             company_name = user_metadata.get('company_name', '') 
             
             # Force default role for security
@@ -185,6 +185,7 @@ def get_current_user():
                     email=email or f"user_{supabase_uid[:8]}@unknown.com",
                     supabase_uid=supabase_uid,
                     role=role,
+                    name=name,
                     company_name=company_name,
                     is_verified_buyer=is_verified_buyer,
                     approval_status=approval_status
@@ -735,7 +736,7 @@ def get_current_user_endpoint():
         "id": user.id, 
         "email": user.email, 
         "role": user.role, 
-        "name": user.company_name,
+        "name": user.name,  # Use name field instead of company_name
         "approval_status": user.approval_status,
         "is_verified_buyer": user.is_verified_buyer
     }), 200
@@ -967,6 +968,7 @@ def create_admin():
             email=admin_email,  # type: ignore
             password_hash=hashed_password,  # type: ignore
             role='admin',  # type: ignore
+            name='Admin',  # type: ignore
             company_name=admin_company,  # type: ignore
             supabase_uid=supabase_uid,  # type: ignore
             approval_status='approved'  # type: ignore

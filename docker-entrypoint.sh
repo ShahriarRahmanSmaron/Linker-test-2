@@ -51,6 +51,7 @@ with app.app_context():
                 email=admin_email,
                 password_hash=generate_password_hash(admin_password),
                 role='admin',
+                name='Admin',
                 approval_status='approved',
                 is_verified_buyer=False
             )

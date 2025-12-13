@@ -22,7 +22,7 @@ interface AuthContextType {
   // Admin login (password-based, separate from Supabase)
   loginAdmin: (email: string, password: string) => Promise<User | undefined>;
   // Supabase sign up
-  signUp: (email: string, password: string, requestedRole: 'buyer' | 'manufacturer', companyName?: string) => Promise<void>;
+  signUp: (email: string, password: string, requestedRole: 'buyer' | 'manufacturer', name: string, companyName?: string) => Promise<void>;
   // Supabase sign in
   signIn: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -210,6 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     requestedRole: 'buyer' | 'manufacturer',
+    name: string,
     companyName?: string
   ): Promise<void> => {
     try {
@@ -219,6 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           data: {
             requested_role: requestedRole,
+            name: name,  // User's display name/username
             company_name: companyName || ''
           },
           emailRedirectTo: `${window.location.origin}/login`

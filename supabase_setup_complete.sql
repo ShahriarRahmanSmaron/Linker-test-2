@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(120) NOT NULL UNIQUE,
     password_hash VARCHAR(256),  -- Nullable for Supabase auth users, required for admin
     role VARCHAR(20) DEFAULT 'general_user' NOT NULL,  -- buyer, manufacturer, admin, general_user
+    name VARCHAR(100),  -- User's display name/username (shown in welcome message)
     company_name VARCHAR(100),
     
     -- Supabase Integration
@@ -229,6 +230,7 @@ BEGIN
                     WHEN requested_role = 'manufacturer' THEN 'pending'
                     ELSE 'none'
                 END,
+                name = COALESCE(NEW.raw_user_meta_data->>'name', name),
                 company_name = COALESCE(NEW.raw_user_meta_data->>'company_name', company_name)
             WHERE id = existing_user_id;
         ELSE
@@ -239,6 +241,7 @@ BEGIN
                 role,
                 is_verified_buyer,
                 approval_status,
+                name,
                 company_name
             ) VALUES (
                 NEW.email,
@@ -255,6 +258,7 @@ BEGIN
                     WHEN requested_role = 'manufacturer' THEN 'pending'
                     ELSE 'none'
                 END,
+                COALESCE(NEW.raw_user_meta_data->>'name', ''),
                 COALESCE(NEW.raw_user_meta_data->>'company_name', '')
             )
             ON CONFLICT (supabase_uid) DO UPDATE SET
@@ -262,6 +266,7 @@ BEGIN
                 role = EXCLUDED.role,
                 is_verified_buyer = EXCLUDED.is_verified_buyer,
                 approval_status = EXCLUDED.approval_status,
+                name = EXCLUDED.name,
                 company_name = EXCLUDED.company_name;
         END IF;
         
@@ -280,6 +285,7 @@ BEGIN
                     WHEN requested_role = 'manufacturer' THEN 'pending'
                     ELSE 'none'
                 END,
+                name = COALESCE(NEW.raw_user_meta_data->>'name', name),
                 company_name = COALESCE(NEW.raw_user_meta_data->>'company_name', company_name)
             WHERE id = existing_user_id;
         ELSE
@@ -290,6 +296,7 @@ BEGIN
                 role,
                 is_verified_buyer,
                 approval_status,
+                name,
                 company_name
             ) VALUES (
                 NEW.email,
@@ -303,6 +310,7 @@ BEGIN
                     WHEN requested_role = 'manufacturer' THEN 'pending'
                     ELSE 'none'
                 END,
+                COALESCE(NEW.raw_user_meta_data->>'name', ''),
                 COALESCE(NEW.raw_user_meta_data->>'company_name', '')
             )
             ON CONFLICT (supabase_uid) DO UPDATE SET
@@ -310,6 +318,7 @@ BEGIN
                 role = EXCLUDED.role,
                 is_verified_buyer = EXCLUDED.is_verified_buyer,
                 approval_status = EXCLUDED.approval_status,
+                name = EXCLUDED.name,
                 company_name = EXCLUDED.company_name;
         END IF;
     END IF;

@@ -8,6 +8,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Supabase auth users, required for admin
     role = db.Column(db.String(20), default='general_user')  # buyer, manufacturer, admin, general_user
+    name = db.Column(db.String(100))  # User's display name/username
     company_name = db.Column(db.String(100))
     
     # Supabase Integration Fields
