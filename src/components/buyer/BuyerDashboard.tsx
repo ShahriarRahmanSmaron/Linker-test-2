@@ -849,7 +849,7 @@ export const BuyerDashboard: React.FC = () => {
           <div className="p-4 border-t border-neutral-200">
             <div className="mb-3 p-3 bg-neutral-50 rounded-lg">
               <p className="text-xs text-neutral-500 mb-1 whitespace-nowrap">Logged in as</p>
-              <p className="text-sm font-semibold text-neutral-900 truncate">{data.buyer_dashboard.user_profile.company}</p>
+              <p className="text-sm font-semibold text-neutral-900 truncate">{user?.name || user?.email || 'User'}</p>
             </div>
             <Button
               variant="ghost"
@@ -883,7 +883,7 @@ export const BuyerDashboard: React.FC = () => {
                 )}
               </Button>
               <div>
-                <p className="text-sm text-neutral-500">Welcome back, {data.buyer_dashboard.user_profile.company}</p>
+                <p className="text-sm text-neutral-500">Welcome back, {user?.name || user?.email || 'User'}</p>
               </div>
             </div>
           </div>

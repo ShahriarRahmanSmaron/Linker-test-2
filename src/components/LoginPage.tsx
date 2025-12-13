@@ -202,7 +202,7 @@ export const LoginPage: React.FC = () => {
                     {isSignUp && (
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                                Your Name
+                                Your Name <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -223,14 +223,14 @@ export const LoginPage: React.FC = () => {
                     {isSignUp && (
                         <div>
                             <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                                Company Name {role === 'manufacturer' && '(Optional)'}
+                                Company Name <span className="text-red-500">*</span>
                             </label>
                             <input
                                 id="companyName"
                                 type="text"
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
-                                required={role === 'buyer'}
+                                required
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
                                 placeholder="Your Company"
                             />
