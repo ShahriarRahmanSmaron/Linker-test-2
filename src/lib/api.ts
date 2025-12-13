@@ -116,6 +116,7 @@ function parseJwt(token: string): { exp?: number } | null {
 
 export const api = {
     async request(endpoint: string, options: FetchOptions = {}, isRetry = false) {
+        const requestStart = performance.now();
         // Get a valid Supabase JWT token (with auto-refresh)
         const token = await getValidToken();
 
@@ -125,10 +126,26 @@ export const api = {
             ...options.headers,
         };
 
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers,
-        });
+        // Add a hard timeout to avoid hanging forever on network/proxy issues
+        const controller = new AbortController();
+        const timeoutMs = 15000;
+        const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+        let response: Response;
+        try {
+            response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers,
+                signal: controller.signal,
+            });
+        } finally {
+            window.clearTimeout(timeoutId);
+        }
+
+        const requestMs = Math.round(performance.now() - requestStart);
+        if (endpoint.startsWith('/auth/')) {
+            console.log(`[API] ${options.method || 'GET'} ${endpoint} -> ${response.status} (${requestMs}ms)`);
+        }
 
         if (response.status === 401 && !isRetry) {
             // Token might have expired between check and request

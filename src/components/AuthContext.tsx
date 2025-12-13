@@ -46,15 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // that would trigger Supabase's replay attack detection
   const fetchUserProfile = async (session: Session): Promise<User | null> => {
     try {
+      const start = performance.now();
       // Use the api helper which handles token refresh properly
       const response = await api.get('/auth/me');
 
       if (response.ok) {
         const userData = await response.json();
+        console.log(`[AUTH] Fetched profile in ${Math.round(performance.now() - start)}ms`);
         return userData;
       } else {
         const errorData = await response.json().catch(() => ({ msg: 'Unknown error' }));
         console.error('Failed to fetch user profile:', errorData);
+        console.log(`[AUTH] Profile fetch failed (${response.status}) in ${Math.round(performance.now() - start)}ms`);
         
         // Show user-friendly error message (only for non-401, as api helper handles 401)
         if (response.status === 404) {
@@ -67,6 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error('Error fetching user profile:', error);
+
+      if (error?.name === 'AbortError') {
+        toast.error('Request timed out while loading your profile. Please try again.');
+        return null;
+      }
       
       // More specific error messages
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
@@ -85,12 +93,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Get current session (guard against hanging forever)
+        const sessionPromise = supabase.auth.getSession();
+        const sessionTimeoutMs = 5000;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error('Auth init timed out')), sessionTimeoutMs);
+        });
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (session) {
           setSupabaseUser(session.user);
-          const userProfile = await fetchUserProfile(session);
+          // Profile fetch can also hang if backend/proxy is unhealthy
+          const profilePromise = fetchUserProfile(session);
+          const profileTimeoutMs = 8000;
+          const profileTimeout = new Promise<null>((resolve) => {
+            window.setTimeout(() => resolve(null), profileTimeoutMs);
+          });
+          const userProfile = await Promise.race([profilePromise, profileTimeout]);
           if (userProfile) {
             // SECURITY: Verify email matches between Supabase session and user profile
             const sessionEmail = session.user.email?.toLowerCase();
@@ -202,6 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     companyName?: string
   ): Promise<void> => {
     try {
+      const start = performance.now();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -227,6 +248,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         throw error;
       }
+
+      console.log(`[AUTH] Supabase signUp completed in ${Math.round(performance.now() - start)}ms`);
 
       if (data.user) {
         // Check if user is already confirmed (auto-confirmed or already verified)
@@ -259,10 +282,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Supabase sign in
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
+      const start = performance.now();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+
+      console.log(`[AUTH] Supabase signIn completed in ${Math.round(performance.now() - start)}ms`);
 
       if (error) throw error;
 

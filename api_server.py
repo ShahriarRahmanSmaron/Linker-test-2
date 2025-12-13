@@ -306,6 +306,12 @@ def health_check():
     """Health check endpoint for load balancers and monitoring."""
     return jsonify({'status': 'ok'}), 200
 
+
+@app.route('/api/health')
+def api_health_check():
+    """Health check endpoint under /api for reverse-proxied setups."""
+    return jsonify({'status': 'ok'}), 200
+
 @app.route('/api/fabric-groups')
 @limiter.limit("100 per minute")
 def get_fabric_groups():
