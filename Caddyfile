@@ -20,22 +20,27 @@ www.fab-ai.co {
 
     # Static files served directly by Caddy (faster, frees up Python workers)
     handle /static/mockups/* {
+        root * /srv
         file_server
     }
 
     handle /static/mockup-templates/* {
+        root * /srv
         file_server
     }
 
     handle /static/swatches/* {
+        root * /srv
         file_server
     }
 
     handle /static/silhouettes/* {
+        root * /srv
         file_server
     }
 
     handle /images/* {
+        root * /srv
         file_server
     }
 
