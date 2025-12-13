@@ -47,8 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (session: Session): Promise<User | null> => {
     try {
       const start = performance.now();
-      // Use the api helper which handles token refresh properly
-      const response = await api.get('/auth/me');
+      // Use the api helper with the session's access token directly
+      // This avoids race conditions where getSession() might not have the new session yet
+      const response = await api.get('/auth/me', {}, session.access_token);
 
       if (response.ok) {
         const userData = await response.json();

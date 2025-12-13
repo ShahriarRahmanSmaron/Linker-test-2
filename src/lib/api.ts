@@ -115,10 +115,10 @@ function parseJwt(token: string): { exp?: number } | null {
 }
 
 export const api = {
-    async request(endpoint: string, options: FetchOptions = {}, isRetry = false) {
+    async request(endpoint: string, options: FetchOptions = {}, isRetry = false, providedToken?: string) {
         const requestStart = performance.now();
-        // Get a valid Supabase JWT token (with auto-refresh)
-        const token = await getValidToken();
+        // Use provided token if available (e.g., from fresh login), otherwise get from session
+        const token = providedToken || await getValidToken();
 
         const headers = {
             'Content-Type': 'application/json',
@@ -207,27 +207,27 @@ export const api = {
         return response;
     },
 
-    get(endpoint: string, options: FetchOptions = {}) {
-        return this.request(endpoint, { ...options, method: 'GET' });
+    get(endpoint: string, options: FetchOptions = {}, token?: string) {
+        return this.request(endpoint, { ...options, method: 'GET' }, false, token);
     },
 
-    post(endpoint: string, data: any, options: FetchOptions = {}) {
+    post(endpoint: string, data: any, options: FetchOptions = {}, token?: string) {
         return this.request(endpoint, {
             ...options,
             method: 'POST',
             body: JSON.stringify(data),
-        });
+        }, false, token);
     },
 
-    put(endpoint: string, data: any, options: FetchOptions = {}) {
+    put(endpoint: string, data: any, options: FetchOptions = {}, token?: string) {
         return this.request(endpoint, {
             ...options,
             method: 'PUT',
             body: JSON.stringify(data),
-        });
+        }, false, token);
     },
 
-    delete(endpoint: string, options: FetchOptions = {}) {
-        return this.request(endpoint, { ...options, method: 'DELETE' });
+    delete(endpoint: string, options: FetchOptions = {}, token?: string) {
+        return this.request(endpoint, { ...options, method: 'DELETE' }, false, token);
     },
 };
