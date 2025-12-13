@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 class User(db.Model):
+    __tablename__ = 'users'  # Match Supabase table name
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Supabase auth users, required for admin
@@ -23,6 +24,6 @@ class Fabric(db.Model):
     width = db.Column(db.String(50))
     composition = db.Column(db.String(255))
     status = db.Column(db.String(50), default='pending')
-    manufacturer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    manufacturer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     meta_data = db.Column(db.JSON)
     image_path = db.Column(db.String(255)) # Optimization: Store path to avoid N+1 lookups
