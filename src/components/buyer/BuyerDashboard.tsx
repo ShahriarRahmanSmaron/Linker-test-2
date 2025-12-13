@@ -345,8 +345,8 @@ export const BuyerDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-neutral-900 mb-2">Fabric Library</h1>
-              <p className="text-neutral-500">Search by fabrication, code, composition, or mill.</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">Fabric Library</h1>
+              <p className="text-sm sm:text-base text-neutral-500">Search by fabrication, code, composition, or mill.</p>
             </div>
 
             <div className="mb-6">
@@ -404,7 +404,7 @@ export const BuyerDashboard: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {fabrics.map((fabric) => {
                 const fabricId = fabric.ref || fabric.id;
                 return (
@@ -441,8 +441,8 @@ export const BuyerDashboard: React.FC = () => {
         return (
           <div className="space-y-8">
             <div>
-              <h1 className="text-3xl font-bold text-neutral-900 mb-2">Dashboard</h1>
-              <p className="text-neutral-500">Overview of your RFQs, samples, and activities</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">Dashboard</h1>
+              <p className="text-sm sm:text-base text-neutral-500">Overview of your RFQs, samples, and activities</p>
             </div>
 
             {/* User Profile Card */}
@@ -465,7 +465,7 @@ export const BuyerDashboard: React.FC = () => {
             </Card>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <Card className="p-6 bg-white border border-neutral-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -504,7 +504,7 @@ export const BuyerDashboard: React.FC = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card className="p-6 bg-white border border-neutral-200">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-bold text-neutral-900">Active RFQs</h2>
@@ -798,69 +798,73 @@ export const BuyerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 flex">
+    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 flex relative">
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         data-sidebar
-        className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-white border-r border-neutral-200 flex flex-col transition-all duration-300 ease-in-out overflow-hidden relative`}
+        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          } fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-neutral-200 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none`}
       >
         {/* Logo */}
-        {sidebarOpen && (
-          <div className="p-6 border-b border-neutral-200">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary-50 rounded-lg">
-                <Layers className="w-6 h-6 text-primary-600" />
-              </div>
-              <span className="text-xl font-bold text-neutral-900">Fab-Ai</span>
+        <div className="p-6 border-b border-neutral-200">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary-50 rounded-lg">
+              <Layers className="w-6 h-6 text-primary-600" />
             </div>
+            <span className="text-xl font-bold text-neutral-900">Fab-Ai</span>
           </div>
-        )}
+        </div>
 
         {/* Navigation */}
-        {sidebarOpen && (
-          <nav className="flex-1 p-4 space-y-1">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveView(item.id);
-                    if (window.innerWidth < 1024) {
-                      setSidebarOpen(false);
-                    }
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                    ? 'bg-primary-50 text-primary-700 font-semibold'
-                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
-                    }`}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        )}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveView(item.id);
+                  // Always close sidebar on mobile after selection
+                  if (window.innerWidth < 1024) {
+                    setSidebarOpen(false);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                  ? 'bg-primary-50 text-primary-700 font-semibold'
+                  : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                  }`}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="whitespace-nowrap">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         {/* User Info & Logout */}
-        {sidebarOpen && (
-          <div className="p-4 border-t border-neutral-200">
-            <div className="mb-3 p-3 bg-neutral-50 rounded-lg">
-              <p className="text-xs text-neutral-500 mb-1 whitespace-nowrap">Logged in as</p>
-              <p className="text-sm font-semibold text-neutral-900 truncate">{user?.name || user?.email || 'User'}</p>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={logout}
-              className="w-full flex items-center gap-2 justify-start text-neutral-600 hover:text-neutral-900"
-            >
-              <LogOut className="w-4 h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Logout</span>
-            </Button>
+        <div className="p-4 border-t border-neutral-200">
+          <div className="mb-3 p-3 bg-neutral-50 rounded-lg">
+            <p className="text-xs text-neutral-500 mb-1 whitespace-nowrap">Logged in as</p>
+            <p className="text-sm font-semibold text-neutral-900 truncate">{user?.name || user?.email || 'User'}</p>
           </div>
-        )}
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className="w-full flex items-center gap-2 justify-start text-neutral-600 hover:text-neutral-900"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Logout</span>
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -891,7 +895,7 @@ export const BuyerDashboard: React.FC = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto" onClick={handleContentClick}>
-          <div className="max-w-7xl mx-auto px-8 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
             {renderContent()}
           </div>
         </div>
