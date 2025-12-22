@@ -77,6 +77,8 @@ start_server.ps1
 # Documentation
 # Ignore auto-generated docs but keep important ones
 .cursor/plans/*.md
+# Ignore repo-generated context dump
+CONTEXT.md
 # Note: Keep supabase.md, GCP.md, README.md tracked
 
 # Data files (may contain sensitive information)

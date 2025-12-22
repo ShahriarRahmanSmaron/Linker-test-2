@@ -115,9 +115,10 @@ function parseJwt(token: string): { exp?: number } | null {
 }
 
 export const api = {
-    async request(endpoint: string, options: FetchOptions = {}, isRetry = false) {
-        // Get a valid Supabase JWT token (with auto-refresh)
-        const token = await getValidToken();
+    async request(endpoint: string, options: FetchOptions = {}, isRetry = false, providedToken?: string) {
+        const requestStart = performance.now();
+        // Use provided token if available (e.g., from fresh login), otherwise get from session
+        const token = providedToken || await getValidToken();
 
         const headers = {
             'Content-Type': 'application/json',
@@ -125,17 +126,26 @@ export const api = {
             ...options.headers,
         };
 
-        // Add timeout to prevent hanging requests (10 seconds)
+        // Add a hard timeout to avoid hanging forever on network/proxy issues
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers,
-            signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
+        const timeoutMs = 15000;
+        const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+        let response: Response;
+        try {
+            response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers,
+                signal: controller.signal,
+            });
+        } finally {
+            window.clearTimeout(timeoutId);
+        }
+
+        const requestMs = Math.round(performance.now() - requestStart);
+        if (endpoint.startsWith('/auth/')) {
+            console.log(`[API] ${options.method || 'GET'} ${endpoint} -> ${response.status} (${requestMs}ms)`);
+        }
 
         if (response.status === 401 && !isRetry) {
             // Token might have expired between check and request
@@ -197,27 +207,27 @@ export const api = {
         return response;
     },
 
-    get(endpoint: string, options: FetchOptions = {}) {
-        return this.request(endpoint, { ...options, method: 'GET' });
+    get(endpoint: string, options: FetchOptions = {}, token?: string) {
+        return this.request(endpoint, { ...options, method: 'GET' }, false, token);
     },
 
-    post(endpoint: string, data: any, options: FetchOptions = {}) {
+    post(endpoint: string, data: any, options: FetchOptions = {}, token?: string) {
         return this.request(endpoint, {
             ...options,
             method: 'POST',
             body: JSON.stringify(data),
-        });
+        }, false, token);
     },
 
-    put(endpoint: string, data: any, options: FetchOptions = {}) {
+    put(endpoint: string, data: any, options: FetchOptions = {}, token?: string) {
         return this.request(endpoint, {
             ...options,
             method: 'PUT',
             body: JSON.stringify(data),
-        });
+        }, false, token);
     },
 
-    delete(endpoint: string, options: FetchOptions = {}) {
-        return this.request(endpoint, { ...options, method: 'DELETE' });
+    delete(endpoint: string, options: FetchOptions = {}, token?: string) {
+        return this.request(endpoint, { ...options, method: 'DELETE' }, false, token);
     },
 };

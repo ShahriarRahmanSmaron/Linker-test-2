@@ -1,14 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'buyer' | 'manufacturer' | 'admin' | 'general_user' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'none';
-
-// Use relative path to leverage Vite proxy, or VITE_API_URL if set
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface User {
   id: number;
@@ -46,27 +44,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile from backend using Supabase JWT
   const fetchUserProfile = async (session: Session): Promise<User | null> => {
     try {
-      // Use the token we already have from the provided session.
-      // This avoids extra supabase.auth.getSession() calls during login/init,
-      // which can otherwise feel "stuck" if the Supabase client is slow.
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 10000);
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        signal: controller.signal,
-      });
-      window.clearTimeout(timeoutId);
+      const start = performance.now();
+      // Use the api helper with the session's access token directly
+      // This avoids race conditions where getSession() might not have the new session yet
+      const response = await api.get('/auth/me', {}, session.access_token);
 
       if (response.ok) {
         const userData = await response.json();
+        console.log(`[AUTH] Fetched profile in ${Math.round(performance.now() - start)}ms`);
         return userData;
       } else {
         const errorData = await response.json().catch(() => ({ msg: 'Unknown error' }));
         console.error('Failed to fetch user profile:', errorData);
+        console.log(`[AUTH] Profile fetch failed (${response.status}) in ${Math.round(performance.now() - start)}ms`);
         
         // Show user-friendly error message (only for non-401, as api helper handles 401)
         if (response.status === 401) {
@@ -84,6 +74,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error('Error fetching user profile:', error);
+
+      if (error?.name === 'AbortError') {
+        toast.error('Request timed out while loading your profile. Please try again.');
+        return null;
+      }
       
       // More specific error messages
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
@@ -102,12 +97,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Get current session (guard against hanging forever)
+        const sessionPromise = supabase.auth.getSession();
+        const sessionTimeoutMs = 5000;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error('Auth init timed out')), sessionTimeoutMs);
+        });
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (session) {
           setSupabaseUser(session.user);
-          const userProfile = await fetchUserProfile(session);
+          // Profile fetch can also hang if backend/proxy is unhealthy
+          const profilePromise = fetchUserProfile(session);
+          const profileTimeoutMs = 8000;
+          const profileTimeout = new Promise<null>((resolve) => {
+            window.setTimeout(() => resolve(null), profileTimeoutMs);
+          });
+          const userProfile = await Promise.race([profilePromise, profileTimeout]);
           if (userProfile) {
             // SECURITY: Verify email matches between Supabase session and user profile
             const sessionEmail = session.user.email?.toLowerCase();
@@ -219,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     companyName?: string
   ): Promise<void> => {
     try {
+      const start = performance.now();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -244,6 +252,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         throw error;
       }
+
+      console.log(`[AUTH] Supabase signUp completed in ${Math.round(performance.now() - start)}ms`);
 
       if (data.user) {
         // Check if user is already confirmed (auto-confirmed or already verified)
@@ -276,10 +286,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Supabase sign in
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
+      const start = performance.now();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+
+      console.log(`[AUTH] Supabase signIn completed in ${Math.round(performance.now() - start)}ms`);
 
       if (error) throw error;
 

@@ -47,7 +47,7 @@ services:
       - ./supabase_security_fixes.sql:/app/supabase_security_fixes.sql
       # ports: []  <-- REMOVE THIS SECTION
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
