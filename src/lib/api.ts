@@ -125,10 +125,17 @@ export const api = {
             ...options.headers,
         };
 
+        // Add timeout to prevent hanging requests (10 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers,
+            signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
 
         if (response.status === 401 && !isRetry) {
             // Token might have expired between check and request

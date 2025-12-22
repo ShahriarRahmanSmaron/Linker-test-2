@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'buyer' | 'manufacturer' | 'admin' | 'general_user' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'none';
+
+// Use relative path to leverage Vite proxy, or VITE_API_URL if set
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface User {
   id: number;
@@ -42,12 +44,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   // Fetch user profile from backend using Supabase JWT
-  // Note: Token refresh is handled by the api helper to avoid concurrent refreshes
-  // that would trigger Supabase's replay attack detection
   const fetchUserProfile = async (session: Session): Promise<User | null> => {
     try {
-      // Use the api helper which handles token refresh properly
-      const response = await api.get('/auth/me');
+      // Use the token we already have from the provided session.
+      // This avoids extra supabase.auth.getSession() calls during login/init,
+      // which can otherwise feel "stuck" if the Supabase client is slow.
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeoutId);
 
       if (response.ok) {
         const userData = await response.json();
@@ -57,7 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Failed to fetch user profile:', errorData);
         
         // Show user-friendly error message (only for non-401, as api helper handles 401)
-        if (response.status === 404) {
+        if (response.status === 401) {
+          // Session token invalid/expired -> logout and force re-auth
+          await supabase.auth.signOut();
+          setSupabaseUser(null);
+          setUser(null);
+        } else if (response.status === 404) {
           toast.error('User profile not found. Please contact support.');
         } else if (response.status !== 401) {
           toast.error(errorData.msg || 'Failed to load user profile');

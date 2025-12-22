@@ -4,6 +4,9 @@ Includes Supabase authentication for buyers/manufacturers
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
+
 import glob
 import json
 import logging
@@ -76,9 +79,24 @@ migrate = Migrate(app, db)  # type: ignore[arg-type] # Architecture: Enable data
 limiter = Limiter(
     get_remote_address,
     app=app,  # type: ignore[arg-type]
-    default_limits=["200 per day", "50 per hour"],
+    # Default limits should be high enough to support normal app usage.
+    # Endpoint-specific limits (e.g. generate-mockup) remain stricter.
+    default_limits=["5000 per day", "500 per hour"],
     storage_uri="memory://"
 )
+
+# Do NOT rate-limit CORS preflight (OPTIONS) or static asset delivery.
+# Browsers automatically send OPTIONS requests for authenticated API calls
+# (Authorization header), and rate-limiting those will break the UI.
+@limiter.request_filter
+def _exempt_preflight_and_static():  # type: ignore[no-redef]
+    if request.method == "OPTIONS":
+        return True
+    if request.path.startswith("/static/") or request.path.startswith("/images/"):
+        return True
+    if request.path in ("/favicon.ico", "/health"):
+        return True
+    return False
 
 # Configure logging
 logging.basicConfig(

@@ -14,17 +14,43 @@ interface StagingInboxProps {
 export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
     const [fabrics, setFabrics] = useState<AdminFabric[]>([]);
     const [loading, setLoading] = useState(true);
+    // Pagination & Search State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to page 1 on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const fetchFabrics = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/admin/fabrics?status=PENDING_REVIEW');
+            // Build query params
+            const params = new URLSearchParams({
+                status: 'PENDING_REVIEW',
+                page: currentPage.toString(),
+                limit: '20',
+                search: debouncedSearch
+            });
+
+            const response = await api.get(`/admin/fabrics?${params}`);
             if (response.ok) {
                 const data = await response.json();
                 // Handle new paginated response structure
                 if (data.results) {
                     setFabrics(data.results);
+                    setTotalPages(data.pages);
+                    setTotalItems(data.total);
                 } else {
+                    // Fallback for old API (shouldn't happen if backend deployed correctly)
                     setFabrics(data);
                 }
             } else {
@@ -39,7 +65,7 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
 
     useEffect(() => {
         fetchFabrics();
-    }, []);
+    }, [currentPage, debouncedSearch]); // Refetch when page or search changes
 
     const handleQuickApprove = async (id: number) => {
         try {
@@ -75,8 +101,17 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
 
     return (
         <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Staging Inbox ({fabrics.length})</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Staging Inbox ({totalItems})</CardTitle>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        placeholder="Search Ref, Fabrication..."
+                        className="px-3 py-2 border rounded-md text-sm w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
             </CardHeader>
             <CardContent>
                 {loading ? (
@@ -85,47 +120,74 @@ export const StagingInbox: React.FC<StagingInboxProps> = ({ onReview }) => {
                     </div>
                 ) : fabrics.length === 0 ? (
                     <div className="text-center p-8 text-gray-500">
-                        No fabrics pending review.
+                        {searchTerm ? "No fabrics match your search." : "No fabrics pending review."}
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                                <tr>
-                                    <th className="px-4 py-3">Ref ID</th>
-                                    <th className="px-4 py-3">Fabrication</th>
-                                    <th className="px-4 py-3">Uploaded By</th>
-                                    <th className="px-4 py-3">Status</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {fabrics.map((fabric) => (
-                                    <tr key={fabric.id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium">{fabric.ref}</td>
-                                        <td className="px-4 py-3">{fabric.fabrication}</td>
-                                        <td className="px-4 py-3">{fabric.owner_name}</td>
-                                        <td className="px-4 py-3">
-                                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                                                {fabric.status}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right space-x-2">
-                                            <Button size="sm" variant="outline" onClick={() => onReview(fabric)}>
-                                                <Eye className="h-4 w-4 mr-1" /> Review
-                                            </Button>
-                                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleQuickApprove(fabric.id)}>
-                                                <Check className="h-4 w-4 mr-1" /> Approve
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => handleReject(fabric.id)}>
-                                                <X className="h-4 w-4 mr-1" /> Reject
-                                            </Button>
-                                        </td>
+                    <>
+                        <div className="overflow-x-auto min-h-[500px]">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3">Ref ID</th>
+                                        <th className="px-4 py-3">Fabrication</th>
+                                        <th className="px-4 py-3">Uploaded By</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3 text-right">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {fabrics.map((fabric) => (
+                                        <tr key={fabric.id} className="border-b hover:bg-gray-50">
+                                            <td className="px-4 py-3 font-medium">{fabric.ref}</td>
+                                            <td className="px-4 py-3">{fabric.fabrication}</td>
+                                            <td className="px-4 py-3">{fabric.owner_name}</td>
+                                            <td className="px-4 py-3">
+                                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                                                    {fabric.status}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-3 text-right space-x-2">
+                                                <Button size="sm" variant="outline" onClick={() => onReview(fabric)}>
+                                                    <Eye className="h-4 w-4 mr-1" /> Review
+                                                </Button>
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleQuickApprove(fabric.id)}>
+                                                    <Check className="h-4 w-4 mr-1" /> Approve
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => handleReject(fabric.id)}>
+                                                    <X className="h-4 w-4 mr-1" /> Reject
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="flex items-center justify-between mt-4 border-t pt-4">
+                            <div className="text-sm text-gray-500">
+                                Page {currentPage} of {totalPages}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    </>
                 )}
             </CardContent>
         </Card>

@@ -319,16 +319,26 @@ export const BuyerDashboard: React.FC = () => {
     setPage(prev => prev + 1);
   };
 
-  // Auto-collapse sidebar when user interacts with content area
-  const handleContentClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const isToggleButton = target.closest('[data-sidebar-toggle]');
-    const isSidebar = target.closest('[data-sidebar]');
+  // Auto-collapse sidebar when user clicks outside of sidebar
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const isToggleButton = target.closest('[data-sidebar-toggle]');
+      const isSidebar = target.closest('[data-sidebar]');
 
-    if (!isToggleButton && !isSidebar && sidebarOpen) {
-      setSidebarOpen(false);
+      if (!isToggleButton && !isSidebar && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    if (sidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  };
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen]);
 
   const menuItems = [
     { id: 'fabric-library' as DashboardView, label: 'Fabric Library', icon: Search },
@@ -890,7 +900,7 @@ export const BuyerDashboard: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto" onClick={handleContentClick}>
+        <div className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-8 py-8">
             {renderContent()}
           </div>

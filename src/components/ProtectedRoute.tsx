@@ -34,7 +34,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // 1. Check if logged in
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    return <Navigate to={isAdminRoute ? "/admin-login" : "/login"} state={{ from: location }} replace />;
   }
 
   // 2. Build list of allowed roles
