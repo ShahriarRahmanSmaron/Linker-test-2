@@ -205,7 +205,11 @@ export const BuyerDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [data] = useState<BuyerDashboardData>(MOCK_DATA);
   const [activeView, setActiveView] = useState<DashboardView>('fabric-library');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Default: open on desktop, closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024;
+  });
 
   // Search/Fabric Library State
   const [searchTerm, setSearchTerm] = useState('');
@@ -219,11 +223,9 @@ export const BuyerDashboard: React.FC = () => {
   const [hasMore, setHasMore] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
 
-  // Close the mobile sidebar when the main content is interacted with
+  // Close the sidebar when the main content is interacted with
   const handleContentClick = () => {
-    if (window.innerWidth < 1024 && sidebarOpen) {
-      setSidebarOpen(false);
-    }
+    if (sidebarOpen) setSidebarOpen(false);
   };
 
   const formatDate = (dateString: string | undefined) => {
@@ -328,8 +330,10 @@ export const BuyerDashboard: React.FC = () => {
 
   // Auto-collapse sidebar when user clicks outside of sidebar
   React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+    const handlePointerDownOutside = (e: PointerEvent) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+
       const isToggleButton = target.closest('[data-sidebar-toggle]');
       const isSidebar = target.closest('[data-sidebar]');
 
@@ -338,12 +342,19 @@ export const BuyerDashboard: React.FC = () => {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    };
+
     if (sidebarOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // capture=true ensures we still see the event even if something stops propagation
+      document.addEventListener('pointerdown', handlePointerDownOutside, true);
+      document.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handlePointerDownOutside, true);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [sidebarOpen]);
 
@@ -827,8 +838,8 @@ export const BuyerDashboard: React.FC = () => {
       {/* Sidebar */}
       <div
         data-sidebar
-        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-neutral-200 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none`}
+        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-neutral-200 flex flex-col transition-transform duration-300 ease-in-out`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-neutral-200">
@@ -885,7 +896,7 @@ export const BuyerDashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
         {/* Top Bar */}
         <div className="bg-white border-b border-neutral-200 px-4 sm:px-8 py-4">
           <div className="flex justify-between items-center">
