@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FabricFilter } from '../types';
 import { Filter, X, SlidersHorizontal } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectGridContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from './ui/sheet';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -70,7 +70,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
               <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white">
                 <SelectValue placeholder="All Fabrications" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectGridContent columns={4}>
                 <SelectItem value="all">All Fabrications</SelectItem>
                 {isLoadingGroups ? (
                   <SelectItem value="loading" disabled>Loading...</SelectItem>
@@ -79,7 +79,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
                     <SelectItem key={group} value={group}>{group}</SelectItem>
                   ))
                 )}
-              </SelectContent>
+              </SelectGridContent>
             </Select>
 
             <Select value={filters.type || 'all'} onValueChange={(value) => handleChange('type', value)}>
@@ -107,7 +107,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
             </Select>
 
             {activeFilterCount > 0 && (
-              <Button 
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetFilters}
@@ -123,28 +123,28 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
       {/* ==========================================
           MOBILE VIEW: Sticky Trigger & Slide-over
          ========================================== */}
-      
+
       {/* Sticky Mobile Trigger Bar */}
       <div className="md:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-200 sticky top-0 z-20 px-4 py-3 flex justify-between items-center shadow-sm">
-         <div className="text-sm font-medium text-neutral-600">
-            {activeFilterCount > 0 ? (
-                <span className="text-primary-600 font-bold">{activeFilterCount} filters active</span>
-            ) : (
-                'Filter results'
-            )}
-         </div>
-         <Button 
-            onClick={() => setIsMobileOpen(true)}
-            variant={activeFilterCount > 0 ? "default" : "outline"}
-            className="flex items-center"
-         >
-            <SlidersHorizontal size={16} className="mr-2"/> Filters
-            {activeFilterCount > 0 && (
-                <Badge variant="default" className="ml-2 h-4 px-1.5 text-[10px]">
-                    {activeFilterCount}
-                </Badge>
-            )}
-         </Button>
+        <div className="text-sm font-medium text-neutral-600">
+          {activeFilterCount > 0 ? (
+            <span className="text-primary-600 font-bold">{activeFilterCount} filters active</span>
+          ) : (
+            'Filter results'
+          )}
+        </div>
+        <Button
+          onClick={() => setIsMobileOpen(true)}
+          variant={activeFilterCount > 0 ? "default" : "outline"}
+          className="flex items-center"
+        >
+          <SlidersHorizontal size={16} className="mr-2" /> Filters
+          {activeFilterCount > 0 && (
+            <Badge variant="default" className="ml-2 h-4 px-1.5 text-[10px]">
+              {activeFilterCount}
+            </Badge>
+          )}
+        </Button>
       </div>
 
       {/* Mobile Sheet */}
@@ -152,80 +152,80 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
         <SheetContent side="right" className="w-[85%] max-w-sm sm:w-[400px]">
           <SheetHeader>
             <SheetTitle className="flex items-center">
-              <Filter size={18} className="mr-2 text-primary-500"/> Filter Fabrics
+              <Filter size={18} className="mr-2 text-primary-500" /> Filter Fabrics
             </SheetTitle>
           </SheetHeader>
-          
+
           {/* Body (Scrollable) */}
           <div className="p-6 space-y-8 overflow-y-auto flex-1">
-             {/* Fabrication Group */}
-             <div>
-                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Fabrication</label>
-                <Select value={filters.fabrication || 'all'} onValueChange={(value) => handleChange('fabrication', value)}>
-                  <SelectTrigger className="w-full bg-neutral-50">
-                    <SelectValue placeholder="All Fabrications" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Fabrications</SelectItem>
-                    {isLoadingGroups ? (
-                      <SelectItem value="loading" disabled>Loading...</SelectItem>
-                    ) : (
-                      fabricGroups.map(group => (
-                        <SelectItem key={group} value={group}>{group}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-             </div>
+            {/* Fabrication Group */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Fabrication</label>
+              <Select value={filters.fabrication || 'all'} onValueChange={(value) => handleChange('fabrication', value)}>
+                <SelectTrigger className="w-full bg-neutral-50">
+                  <SelectValue placeholder="All Fabrications" />
+                </SelectTrigger>
+                <SelectGridContent columns={2}>
+                  <SelectItem value="all">All Fabrications</SelectItem>
+                  {isLoadingGroups ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : (
+                    fabricGroups.map(group => (
+                      <SelectItem key={group} value={group}>{group}</SelectItem>
+                    ))
+                  )}
+                </SelectGridContent>
+              </Select>
+            </div>
 
-             {/* Type Group */}
-             <div>
-                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Fiber Type</label>
-                <Select value={filters.type || 'all'} onValueChange={(value) => handleChange('type', value)}>
-                  <SelectTrigger className="w-full bg-neutral-50">
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Natural">Natural (Cotton, Wool...)</SelectItem>
-                    <SelectItem value="Synthetic">Synthetic (Poly, Nylon...)</SelectItem>
-                    <SelectItem value="Blend">Blends</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
+            {/* Type Group */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Fiber Type</label>
+              <Select value={filters.type || 'all'} onValueChange={(value) => handleChange('type', value)}>
+                <SelectTrigger className="w-full bg-neutral-50">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="Natural">Natural (Cotton, Wool...)</SelectItem>
+                  <SelectItem value="Synthetic">Synthetic (Poly, Nylon...)</SelectItem>
+                  <SelectItem value="Blend">Blends</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-             {/* GSM Group */}
-             <div>
-                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Weight (GSM)</label>
-                <Select value={filters.gsmRange || 'all'} onValueChange={(value) => handleChange('gsmRange', value)}>
-                  <SelectTrigger className="w-full bg-neutral-50">
-                    <SelectValue placeholder="Any Weight" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Weight</SelectItem>
-                    <SelectItem value="light">Lightweight (&lt;160 GSM)</SelectItem>
-                    <SelectItem value="medium">Midweight (160-240 GSM)</SelectItem>
-                    <SelectItem value="heavy">Heavyweight (&gt;240 GSM)</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
+            {/* GSM Group */}
+            <div>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wide mb-3">Weight (GSM)</label>
+              <Select value={filters.gsmRange || 'all'} onValueChange={(value) => handleChange('gsmRange', value)}>
+                <SelectTrigger className="w-full bg-neutral-50">
+                  <SelectValue placeholder="Any Weight" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Weight</SelectItem>
+                  <SelectItem value="light">Lightweight (&lt;160 GSM)</SelectItem>
+                  <SelectItem value="medium">Midweight (160-240 GSM)</SelectItem>
+                  <SelectItem value="heavy">Heavyweight (&gt;240 GSM)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Footer */}
           <SheetFooter className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline"
-                onClick={resetFilters}
-                className="w-full"
-              >
-                Reset All
-              </Button>
-              <Button 
-                onClick={() => setIsMobileOpen(false)}
-                className="w-full"
-              >
-                Show Results
-              </Button>
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              className="w-full"
+            >
+              Reset All
+            </Button>
+            <Button
+              onClick={() => setIsMobileOpen(false)}
+              className="w-full"
+            >
+              Show Results
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
