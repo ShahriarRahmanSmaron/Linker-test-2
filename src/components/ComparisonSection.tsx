@@ -5,7 +5,7 @@ import { Reveal } from './Reveal';
 
 export const ComparisonSection: React.FC = () => {
   return (
-    <section id="benefits" className="py-16 sm:py-24 bg-white dark:bg-neutral-900 transition-colors">
+    <section id="benefits" className="py-16 sm:py-24 bg-white dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-12 sm:mb-16">
@@ -16,7 +16,7 @@ export const ComparisonSection: React.FC = () => {
           </div>
         </Reveal>
 
-        <Reveal delay={200}>
+        <Reveal>
             <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <table className="w-full min-w-[600px] sm:min-w-[800px] border-collapse">
                     <thead>
@@ -28,7 +28,7 @@ export const ComparisonSection: React.FC = () => {
                     </thead>
                     <tbody>
                         {COMPARISON_DATA.map((row, index) => (
-                            <tr key={index} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-colors">
+                            <tr key={index} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition-[background-color] duration-150">
                                 <td className="py-4 sm:py-6 px-4 sm:px-6 border-b border-neutral-100 dark:border-neutral-800 text-sm sm:text-base text-neutral-900 dark:text-white font-bold">{row.feature}</td>
                                 <td className="py-4 sm:py-6 px-4 sm:px-6 border-b border-neutral-100 dark:border-neutral-800 text-sm sm:text-base text-neutral-500 dark:text-neutral-400 font-light flex items-center">
                                     <XCircle size={16} className="text-red-300 dark:text-red-500 mr-2 flex-shrink-0" /> {row.traditional}

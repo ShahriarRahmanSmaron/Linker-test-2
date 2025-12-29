@@ -7,10 +7,10 @@ export const FinalCTASection: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 sm:py-24 bg-primary-600 dark:bg-primary-700 relative overflow-hidden transition-colors">
-      {/* Decorative circles */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full transform -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full transform translate-x-1/3 translate-y-1/3 blur-3xl"></div>
+    <section className="py-16 sm:py-24 bg-primary-600 dark:bg-primary-700 relative overflow-hidden">
+      {/* Decorative circles - simplified without blur for performance */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full transform translate-x-1/3 translate-y-1/3"></div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
         <Reveal>
@@ -24,13 +24,13 @@ export const FinalCTASection: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button 
                 onClick={() => navigate('/login?role=buyer')}
-                className="bg-white text-primary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl shadow-black/10 hover:bg-neutral-50 hover:scale-105 transition-all duration-200"
+                className="bg-white text-primary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl shadow-black/10 hover:bg-neutral-50 hover:scale-105 transition-[background-color,transform] duration-150"
             >
                 Explore Fabrics Now
             </button>
             <button 
                 onClick={() => navigate('/login?role=manufacturer')}
-                className="bg-transparent border border-white/40 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-white/10 hover:border-white transition-colors"
+                className="bg-transparent border border-white/40 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-white/10 hover:border-white transition-[background-color,border-color] duration-150"
             >
                 List Your Fabrics Today
             </button>

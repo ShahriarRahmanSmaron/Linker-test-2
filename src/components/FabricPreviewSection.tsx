@@ -10,7 +10,7 @@ export const FabricPreviewSection: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="features" className="py-16 sm:py-24 bg-white dark:bg-neutral-900 transition-colors">
+    <section id="features" className="py-16 sm:py-24 bg-white dark:bg-neutral-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12">

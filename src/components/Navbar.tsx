@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Layers, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
@@ -9,12 +9,20 @@ export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const ticking = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      // Throttle scroll events using requestAnimationFrame
+      if (!ticking.current) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -35,8 +43,8 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out ${isScrolled
-        ? 'bg-white/80 backdrop-blur-lg shadow-sm py-3 border-b border-neutral-200/50'
+      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,padding,box-shadow] duration-200 ${isScrolled
+        ? 'bg-white/95 dark:bg-neutral-900/95 shadow-sm py-3 border-b border-neutral-200/50'
         : 'bg-transparent py-5'
         }`}
     >
@@ -44,7 +52,7 @@ export const Navbar: React.FC = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className={`backdrop-blur-sm p-1.5 rounded-lg mr-2 transition-colors ${isScrolled
+            <div className={`p-1.5 rounded-lg mr-2 transition-colors duration-150 ${isScrolled
               ? 'bg-primary-50/80 dark:bg-primary-50/80 group-hover:bg-primary-100 dark:group-hover:bg-primary-100'
               : 'bg-primary-50/80 dark:bg-white/10 group-hover:bg-primary-100 dark:group-hover:bg-white/20'
               }`}>
@@ -104,7 +112,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {
         isMobileMenuOpen && (
-          <div className="md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-t border-neutral-200 dark:border-neutral-800 absolute w-full shadow-xl">
+          <div className="md:hidden bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 absolute w-full shadow-xl">
             <div className="px-4 pt-2 pb-6 space-y-1">
               {navLinks.map((link) => (
                 <button

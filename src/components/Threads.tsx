@@ -125,6 +125,7 @@ const Threads: React.FC<ThreadsProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameId = useRef<number>();
+  const isVisibleRef = useRef(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -166,7 +167,7 @@ const Threads: React.FC<ThreadsProps> = ({
       program.uniforms.iResolution.value.b = clientWidth / clientHeight;
     }
 
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { passive: true });
     resize();
 
     let currentMouse = [0.5, 0.5];
@@ -184,11 +185,29 @@ const Threads: React.FC<ThreadsProps> = ({
     }
 
     if (enableMouseInteraction) {
-      container.addEventListener('mousemove', handleMouseMove);
+      container.addEventListener('mousemove', handleMouseMove, { passive: true });
       container.addEventListener('mouseleave', handleMouseLeave);
     }
 
+    // Pause animation when not visible to save resources during scroll
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting && !animationFrameId.current) {
+          animationFrameId.current = requestAnimationFrame(update);
+        }
+      },
+      { threshold: 0 }
+    );
+    observer.observe(container);
+
     function update(t: number) {
+      // Skip rendering when not visible
+      if (!isVisibleRef.current) {
+        animationFrameId.current = requestAnimationFrame(update);
+        return;
+      }
+
       if (enableMouseInteraction) {
         const smoothing = 0.05;
         currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
@@ -209,6 +228,7 @@ const Threads: React.FC<ThreadsProps> = ({
 
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      observer.disconnect();
       window.removeEventListener('resize', resize);
       if (enableMouseInteraction) {
         container.removeEventListener('mousemove', handleMouseMove);

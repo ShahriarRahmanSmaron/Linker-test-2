@@ -17,25 +17,39 @@ export const FabricCard: React.FC<FabricCardProps> = ({ fabric }) => {
   };
 
   return (
-    <div className="group relative bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 transition-all duration-300 ease-out flex flex-col h-full hover:shadow-xl hover:-translate-y-1 hover:border-primary-200 dark:hover:border-primary-700">
+    <div className="group relative bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 transition-[box-shadow,border-color] duration-150 flex flex-col h-full hover:shadow-lg hover:border-primary-200 dark:hover:border-primary-700">
 
       {/* Visual Swatch Area - Responsive height */}
       <div className="relative h-[160px] sm:h-[200px] bg-neutral-100 overflow-hidden rounded-t-xl cursor-pointer group/swatch" onClick={handleAction}>
-        {/* Fabric Pattern / Color */}
+        {/* Fabric Pattern / Color - using CSS pattern instead of external URL for performance */}
         <div
-          className="absolute inset-0 opacity-90 mix-blend-multiply transition-transform duration-700 ease-in-out group-hover/swatch:scale-110"
-          style={{ backgroundColor: fabric.color }}
+          className="absolute inset-0 opacity-90 transition-transform duration-300 ease-out group-hover/swatch:scale-105"
+          style={{ 
+            backgroundColor: fabric.color
+          }}
         ></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/fabric-of-squares.png')] opacity-20 transition-transform duration-700 ease-in-out group-hover/swatch:scale-110"></div>
+        {/* CSS-based fabric texture pattern for better performance */}
+        <div 
+          className="absolute inset-0 opacity-20 transition-transform duration-300 ease-out group-hover/swatch:scale-105"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 2px,
+              rgba(0,0,0,0.03) 2px,
+              rgba(0,0,0,0.03) 4px
+            )`
+          }}
+        ></div>
 
         {/* Gradient Overlay for Depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/swatch:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/swatch:opacity-100 transition-opacity duration-200"></div>
 
         {/* Action Buttons - Always visible on mobile, hover on desktop */}
-        <div className="absolute bottom-3 right-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover/swatch:opacity-100 transition-all duration-300 translate-y-0 md:translate-y-2 md:group-hover/swatch:translate-y-0 z-10">
+        <div className="absolute bottom-3 right-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover/swatch:opacity-100 transition-opacity duration-200 z-10">
           <button
             onClick={handleAction}
-            className="bg-white text-neutral-900 p-3 rounded-full shadow-lg hover:bg-primary-50 hover:text-primary-600 transition-all hover:scale-110 active:scale-95 flex items-center justify-center touch-manipulation"
+            className="bg-white text-neutral-900 p-3 rounded-full shadow-lg hover:bg-primary-50 hover:text-primary-600 transition-colors duration-150 active:scale-95 flex items-center justify-center touch-manipulation"
             title="View Mockup"
           >
             <Shirt size={18} />
@@ -43,7 +57,7 @@ export const FabricCard: React.FC<FabricCardProps> = ({ fabric }) => {
 
           <button
             onClick={handleAction}
-            className="bg-white text-neutral-900 p-3 rounded-full shadow-lg hover:bg-primary-50 hover:text-primary-600 transition-all hover:scale-110 active:scale-95 flex items-center justify-center touch-manipulation"
+            className="bg-white text-neutral-900 p-3 rounded-full shadow-lg hover:bg-primary-50 hover:text-primary-600 transition-colors duration-150 active:scale-95 flex items-center justify-center touch-manipulation"
             title="Add to Moodboard"
           >
             <Presentation size={18} />

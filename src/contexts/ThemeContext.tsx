@@ -70,7 +70,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Silently fail if localStorage is unavailable
     }
-  }, [theme, location]);
+  }, [theme]);
 
   // Memoized toggle for performance on mobile (prevents re-renders)
   const toggleTheme = useCallback(() => {

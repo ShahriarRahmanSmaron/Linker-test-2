@@ -5,7 +5,7 @@ import { Reveal } from './Reveal';
 
 export const TestimonialsSection: React.FC = () => {
   return (
-    <section className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 border-t border-neutral-200 dark:border-neutral-700 transition-colors">
+    <section className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 border-t border-neutral-200 dark:border-neutral-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-12 sm:mb-16">
@@ -18,10 +18,10 @@ export const TestimonialsSection: React.FC = () => {
           </div>
         </Reveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {TESTIMONIALS.map((testimonial, index) => (
-            <Reveal key={testimonial.id} delay={index * 150} className="h-full">
-              <div className="bg-white dark:bg-neutral-800 p-6 sm:p-8 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-700 h-full flex flex-col hover:shadow-md hover:border-primary-500/30 dark:hover:border-primary-700/50 transition-all duration-300">
+        <Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {TESTIMONIALS.map((testimonial) => (
+              <div key={testimonial.id} className="bg-white dark:bg-neutral-800 p-6 sm:p-8 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-700 h-full flex flex-col hover:shadow-md hover:border-primary-500/30 dark:hover:border-primary-700/50 transition-[box-shadow,border-color] duration-200">
                 {/* Stars */}
                 <div className="flex space-x-1 mb-4 sm:mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -51,9 +51,9 @@ export const TestimonialsSection: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </Reveal>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   );

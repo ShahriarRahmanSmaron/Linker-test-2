@@ -27,7 +27,7 @@ export const HowItWorksSection: React.FC = () => {
   const buttonClass = activeTab === 'buyer' ? 'bg-primary-500 hover:bg-primary-600 shadow-primary-500/30' : 'bg-accent-500 hover:bg-accent-600 shadow-accent-500/30';
 
   return (
-    <section id="how-it-works" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-700 transition-colors">
+    <section id="how-it-works" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-8 sm:mb-12">
@@ -59,22 +59,24 @@ export const HowItWorksSection: React.FC = () => {
           </div>
         </Reveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 relative mt-12 sm:mt-16">
-          {/* Connector Line for Desktop */}
-          <div className="hidden lg:block absolute top-12 left-[16%] right-[16%] h-px bg-neutral-200 dark:bg-neutral-700 -z-10"></div>
+        <Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 relative mt-12 sm:mt-16">
+            {/* Connector Line for Desktop */}
+            <div className="hidden lg:block absolute top-12 left-[16%] right-[16%] h-px bg-neutral-200 dark:bg-neutral-700 -z-10"></div>
 
-          {steps.map((step, index) => (
-            <Reveal key={`${activeTab}-${step.id}`} delay={index * 150} className="flex flex-col items-center text-center group">
-              <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-sm group-hover:scale-110 group-hover:shadow-md bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 transition-all duration-300 ease-out`}>
-                {getIcon(step.iconName)}
+            {steps.map((step) => (
+              <div key={`${activeTab}-${step.id}`} className="flex flex-col items-center text-center group">
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-sm group-hover:scale-110 group-hover:shadow-md bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 transition-[transform,box-shadow] duration-200 ease-out`}>
+                  {getIcon(step.iconName)}
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-2 sm:mb-3">{step.title}</h3>
+                <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 leading-relaxed font-light px-2 sm:px-4">{step.description}</p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-2 sm:mb-3">{step.title}</h3>
-              <p className="text-sm sm:text-base text-neutral-500 dark:text-neutral-400 leading-relaxed font-light px-2 sm:px-4">{step.description}</p>
-            </Reveal>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Reveal>
 
-        <Reveal delay={500}>
+        <Reveal>
           <div className="mt-12 sm:mt-20 text-center">
              <button 
                 onClick={() => navigate(activeTab === 'buyer' ? '/login?role=buyer' : '/login?role=manufacturer')}

@@ -8,7 +8,7 @@ export const MoodboardSection: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="moodboards" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 overflow-hidden border-t border-neutral-200 dark:border-neutral-700 transition-colors">
+    <section id="moodboards" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-800/30 overflow-hidden border-t border-neutral-200 dark:border-neutral-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           
@@ -42,18 +42,18 @@ export const MoodboardSection: React.FC = () => {
               ))}
             </ul>
 
-            <Reveal delay={500}>
-              <button onClick={() => navigate('/login?role=buyer')} className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
+            <Reveal>
+              <button onClick={() => navigate('/login?role=buyer')} className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors duration-150">
                 Start Moodboard
               </button>
             </Reveal>
           </div>
 
           {/* Right: Visual UI Mock */}
-          <div className="order-1 lg:order-2 relative perspective-1000">
-            <Reveal delay={200} className="transform transition-transform hover:rotate-0 duration-500 lg:rotate-y-6">
+          <div className="order-1 lg:order-2 relative">
+            <Reveal>
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary-100 dark:from-primary-900/30 to-accent-100 dark:to-accent-900/30 rounded-3xl transform -rotate-2 opacity-70"></div>
-                <div className="relative bg-white/80 dark:bg-neutral-800/80 backdrop-blur-md rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+                <div className="relative bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
                 
                 {/* Fake Toolbar */}
                 <div className="flex justify-between items-center mb-6 border-b border-neutral-100 dark:border-neutral-700 pb-4">
@@ -73,14 +73,14 @@ export const MoodboardSection: React.FC = () => {
                     <div className="space-y-3 sm:space-y-4">
                         <div className="bg-neutral-100 dark:bg-neutral-700 rounded-lg h-32 sm:h-40 w-full overflow-hidden relative group cursor-pointer hover:shadow-md transition-shadow">
                             <div className="absolute inset-0 bg-warning-400/20 dark:bg-warning-400/10 mix-blend-multiply"></div>
-                            <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200">Mustard Pique</div>
+                            <div className="absolute bottom-2 left-2 bg-white dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm">Mustard Pique</div>
                         </div>
                         <div className="bg-neutral-100 dark:bg-neutral-700 rounded-lg h-44 sm:h-56 w-full overflow-hidden relative cursor-pointer hover:shadow-md transition-shadow">
                             <div className="absolute inset-0 bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
                                 {/* Abstract shape for mockup */}
                                 <div className="w-20 sm:w-24 h-28 sm:h-32 bg-primary-200 dark:bg-primary-700 rounded-t-3xl rounded-b-lg opacity-50"></div>
                             </div>
-                            <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200">Mockup: Polo</div>
+                            <div className="absolute bottom-2 left-2 bg-white dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm">Mockup: Polo</div>
                         </div>
                     </div>
                     
@@ -90,7 +90,7 @@ export const MoodboardSection: React.FC = () => {
                             <div className="absolute inset-0 bg-accent-50 dark:bg-accent-900/30 flex items-center justify-center">
                                 <div className="w-16 sm:w-20 h-16 sm:h-20 bg-accent-200 dark:bg-accent-700 rounded-full blur-xl opacity-60"></div>
                             </div>
-                            <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200">Sage Fleece</div>
+                            <div className="absolute bottom-2 left-2 bg-white dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm">Sage Fleece</div>
                         </div>
                         <div className="bg-white dark:bg-neutral-700 border border-neutral-100 dark:border-neutral-600 rounded-lg p-2 sm:p-3 shadow-sm cursor-pointer hover:border-primary-200 dark:hover:border-primary-700 transition-colors">
                             <div className="flex items-center space-x-2 mb-2">

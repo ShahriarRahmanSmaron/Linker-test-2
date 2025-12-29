@@ -10,9 +10,9 @@ export const PricingSection: React.FC = () => {
 
   return (
     <section id="pricing" className="py-24 bg-neutral-900 text-white relative overflow-hidden">
-        {/* Ambient Background */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary-900/40 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-accent-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+        {/* Ambient Background - reduced blur for better performance */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary-900/40 rounded-full blur-3xl pointer-events-none" style={{ willChange: 'auto' }}></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-accent-900/20 rounded-full blur-3xl pointer-events-none" style={{ willChange: 'auto' }}></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <Reveal>
@@ -27,7 +27,7 @@ export const PricingSection: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
           {PRICING_TIERS.map((tier, index) => (
             <Reveal key={tier.title} delay={index * 200} className="h-full">
-              <div className={`h-full p-8 rounded-2xl border backdrop-blur-sm flex flex-col transition-all duration-300 hover:translate-y-[-5px] ${tier.variant === 'buyer' ? 'bg-white/5 border-white/10 hover:border-primary-500/50 hover:bg-white/10' : 'bg-white/5 border-white/10 hover:border-accent-500/50 hover:bg-white/10'}`}>
+              <div className={`h-full p-8 rounded-2xl border flex flex-col transition-[transform,border-color,background-color] duration-200 hover:translate-y-[-5px] ${tier.variant === 'buyer' ? 'bg-white/5 border-white/10 hover:border-primary-500/50 hover:bg-white/10' : 'bg-white/5 border-white/10 hover:border-accent-500/50 hover:bg-white/10'}`}>
                 
                 <h3 className={`text-2xl font-bold mb-2 ${tier.variant === 'buyer' ? 'text-white' : 'text-white'}`}>{tier.title}</h3>
                 <div className="h-1 w-12 rounded bg-neutral-700 mb-8"></div>
