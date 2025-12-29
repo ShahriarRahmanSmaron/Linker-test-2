@@ -9,7 +9,7 @@ export const TestimonialsSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight mb-3 sm:mb-4">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight mb-3 sm:mb-4">
               What Sourcing Professionals Say
             </h2>
             <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto">

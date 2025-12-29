@@ -16,7 +16,7 @@ export const MoodboardSection: React.FC = () => {
           <div className="order-2 lg:order-1">
             <Reveal>
               <div className="text-sm font-bold text-accent-500 dark:text-accent-400 uppercase tracking-wider mb-2">Feature Highlight</div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 dark:text-white mb-4 sm:mb-6 tracking-tight">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4 sm:mb-6 tracking-tight">
                 Moodboard Generator
               </h2>
               <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 mb-6 sm:mb-8 leading-relaxed font-light">

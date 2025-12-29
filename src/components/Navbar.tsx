@@ -51,7 +51,7 @@ export const Navbar: React.FC = () => {
               <Layers className={`h-6 w-6 transition-colors ${isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-white'
                 }`} />
             </div>
-            <span className={`text-xl font-extrabold tracking-tight transition-colors ${isScrolled ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
+            <span className={`font-display text-xl font-bold tracking-tight transition-colors ${isScrolled ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
               }`}>
               <span className={isScrolled ? 'text-primary-600' : 'text-primary-600 dark:text-primary-300'}>Fab</span>
               <span className={isScrolled ? 'text-accent-500' : 'text-accent-500 dark:text-accent-400'}>-Ai</span>
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className={`text-sm font-medium transition-colors duration-200 ${isScrolled
+                className={`font-display text-sm font-medium transition-colors duration-200 ${isScrolled
                   ? 'text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400'
                   : 'text-neutral-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-300'
                   }`}
@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
             </div>
             <button
               onClick={() => navigate('/login?role=buyer')}
-              className="bg-primary-500 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95"
+              className="font-display bg-primary-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95"
             >
               Explore Fabrics
             </button>

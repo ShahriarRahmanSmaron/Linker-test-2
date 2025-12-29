@@ -32,7 +32,7 @@ export const HowItWorksSection: React.FC = () => {
         <Reveal>
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-sm text-primary-600 dark:text-primary-400 font-bold tracking-wide uppercase mb-2">Workflow</h2>
-            <p className="text-2xl sm:text-3xl md:text-4xl leading-tight font-extrabold text-neutral-900 dark:text-white tracking-tight">
+            <p className="font-display text-2xl sm:text-3xl md:text-4xl leading-tight font-bold text-neutral-900 dark:text-white tracking-tight">
               One Platform. Two Worlds.
             </p>
             

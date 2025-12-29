@@ -19,7 +19,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Nunito', 'sans-serif'],
+        display: ['Playfair Display', 'Georgia', 'serif'],
+        heading: ['Montserrat', 'sans-serif'],
       },
       colors: {
         // Global 2025 Trend Palette

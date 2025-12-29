@@ -14,7 +14,7 @@ export const FinalCTASection: React.FC = () => {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
         <Reveal>
-            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white mb-4 sm:mb-6 tracking-tight leading-tight">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight leading-tight">
             Transform the Way You Source and Showcase Knit Fabrics.
             </h2>
             <p className="text-primary-50 text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto font-light">

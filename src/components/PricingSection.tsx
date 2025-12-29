@@ -17,7 +17,7 @@ export const PricingSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <Reveal>
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-6 tracking-tight">One Platform. Two Worlds.</h2>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-6 tracking-tight">One Platform. Two Worlds.</h2>
             <p className="text-neutral-400 max-w-2xl mx-auto text-lg font-light">
               Connect seamlessly whether you are sourcing the next big trend or manufacturing it.
             </p>

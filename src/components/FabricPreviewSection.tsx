@@ -16,7 +16,7 @@ export const FabricPreviewSection: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12">
             <div className="max-w-2xl">
               <div className="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-2">Feature Highlight</div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">Fabric-to-Mockup Engine</h2>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Fabric-to-Mockup Engine</h2>
               <p className="mt-3 sm:mt-4 text-base sm:text-lg text-neutral-500 dark:text-neutral-400 font-light">
                 Converts plain fabric images into garment visuals instantly. See how fabrics behave on real silhouettes before you sample.
               </p>

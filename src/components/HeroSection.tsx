@@ -28,14 +28,14 @@ export const HeroSection: React.FC = () => {
                     {/* Left Column: Text */}
                     <div className="text-center lg:text-left z-10">
                         <Reveal delay={100}>
-                            <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-primary-500/20 dark:bg-primary-500/20 text-primary-700 dark:text-white text-[10px] sm:text-xs font-bold tracking-wide mb-4 sm:mb-6 border border-primary-400/40 dark:border-primary-400/40 shadow-sm uppercase backdrop-blur-sm">
+                            <div className="font-heading inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-primary-500/20 dark:bg-primary-500/20 text-primary-700 dark:text-white text-[10px] sm:text-xs font-semibold tracking-wide mb-4 sm:mb-6 border border-primary-400/40 dark:border-primary-400/40 shadow-sm uppercase backdrop-blur-sm">
                                 <span className="flex h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full bg-primary-500 dark:bg-primary-300 mr-1.5 sm:mr-2 animate-pulse"></span>
                                 Visual Sourcing Platform
                             </div>
                         </Reveal>
 
                         <Reveal delay={200}>
-                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-neutral-900 dark:text-white tracking-tight leading-[1.1] mb-4 sm:mb-6">
+                            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-white tracking-tight leading-[1.1] mb-4 sm:mb-6">
                                 Discover. Visualize.<br />
                                 Source Fabrics — <span className="text-primary-600 dark:text-primary-400">Smarter.</span>
                             </h1>
@@ -75,7 +75,7 @@ export const HeroSection: React.FC = () => {
                                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-400"></div>
                                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-400"></div>
                                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-400"></div>
-                                    <div className="ml-3 sm:ml-4 flex-1 bg-white dark:bg-white/20 h-5 sm:h-6 rounded-md border border-neutral-200 dark:border-white/20 flex items-center px-2 text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-300 font-light shadow-inner">
+                                    <div className="ml-3 sm:ml-4 flex-1 bg-white dark:bg-white/20 h-5 sm:h-6 rounded-md border border-neutral-200 dark:border-white/20 flex items-center px-2 text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-300 font-display shadow-inner">
                                         <Search size={10} className="mr-1.5 sm:mr-2 opacity-60" /> fab-ai.co/search
                                     </div>
                                 </div>

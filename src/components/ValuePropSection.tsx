@@ -14,7 +14,7 @@ export const ValuePropSection: React.FC = () => {
           <Reveal>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-primary-50 dark:from-primary-900/20 to-accent-50 dark:to-accent-900/20 rounded-full opacity-40"></div>
-              <h2 className="relative text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 dark:text-white leading-tight tracking-tight mb-4 sm:mb-6">
+              <h2 className="font-display relative text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white leading-tight tracking-tight mb-4 sm:mb-6">
                 Tired of endless email threads, messy catalogs, and <span className="text-neutral-400 dark:text-neutral-500">flat fabric images?</span>
               </h2>
               <p className="relative text-base sm:text-lg font-light text-neutral-600 dark:text-neutral-300 leading-relaxed mb-6 sm:mb-8">

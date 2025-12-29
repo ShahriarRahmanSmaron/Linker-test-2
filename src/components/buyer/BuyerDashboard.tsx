@@ -373,22 +373,33 @@ export const BuyerDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">Fabric Library</h1>
-              <p className="text-sm sm:text-base text-neutral-500">Search by fabrication, code, composition, or mill.</p>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">Fab-Ai Library</h1>
+              <p className="text-sm sm:text-base text-neutral-500">Search by fabrication, code, composition</p>
             </div>
 
             <div className="mb-6">
-              <div className="relative max-w-2xl">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-neutral-400" />
+              <div className="relative max-w-2xl group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                  <Search className="h-5 w-5 text-accent-600 transition-colors duration-300 group-focus-within:text-accent-700" />
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-11 pr-4 py-3 border border-neutral-200 rounded-lg leading-5 bg-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-150 ease-in-out sm:text-sm"
-                  placeholder="Search fabrics (e.g. 'Organic Cotton', 'Fleece', 'Masco Knits')..."
+                  id="fabric-search"
+                  className="peer block w-full pl-11 pr-4 pt-5 pb-2 border-2 border-accent-300/60 rounded-xl leading-5 bg-accent-50/20 text-neutral-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 transition-all duration-300 ease-in-out sm:text-sm shadow-sm placeholder-transparent"
+                  placeholder="Search fabrics"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <label
+                  htmlFor="fabric-search"
+                  className={`absolute left-11 transition-all duration-300 ease-out pointer-events-none text-accent-600 font-medium ${
+                    searchTerm 
+                      ? 'top-1.5 text-xs' 
+                      : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs'
+                  }`}
+                >
+                  Search fabrics
+                </label>
               </div>
             </div>
 
