@@ -62,12 +62,12 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
       <div className="hidden md:block bg-white border-b border-neutral-200 sticky top-0 z-20 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center text-neutral-500 text-sm font-medium mr-2">
+            <div className="flex items-center text-neutral-500 text-sm font-medium font-display mr-2">
               <Filter size={16} className="mr-2" /> Filters:
             </div>
 
             <Select value={filters.fabrication || 'all'} onValueChange={(value) => handleChange('fabrication', value)}>
-              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white">
+              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white font-display">
                 <SelectValue placeholder="All Fabrications" />
               </SelectTrigger>
               <SelectGridContent columns={4}>
@@ -83,7 +83,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
             </Select>
 
             <Select value={filters.type || 'all'} onValueChange={(value) => handleChange('type', value)}>
-              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white">
+              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white font-display">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +95,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, setFilter
             </Select>
 
             <Select value={filters.gsmRange || 'all'} onValueChange={(value) => handleChange('gsmRange', value)}>
-              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white">
+              <SelectTrigger className="w-[180px] bg-neutral-50 hover:bg-white font-display">
                 <SelectValue placeholder="Any Weight" />
               </SelectTrigger>
               <SelectContent>

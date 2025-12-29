@@ -66,7 +66,7 @@ export const FabricCard: React.FC<FabricCardProps> = ({ fabric }) => {
       </div>
 
       {/* Details Body */}
-      <div className="p-3 sm:p-4 flex-1 flex flex-col">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col bg-[#cce5ff]">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white truncate w-full group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200" title={fabric.name}>{fabric.name}</h3>
         </div>

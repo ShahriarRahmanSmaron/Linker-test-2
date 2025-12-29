@@ -152,7 +152,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
           {/* PERFORMANCE FIX: Replaced custom glass styles with optimized .glass-panel class from index.css */}
           <div className="relative rounded-3xl overflow-hidden glass-panel shadow-2xl">
             {/* Simple gradient background instead of complex light refraction layers */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0e8] to-[#d4e5d4] pointer-events-none"></div>
 
             <div className="relative flex flex-col h-full max-h-[95vh]">
               {/* Header */}
@@ -184,7 +184,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                 {viewMode === 'select' && (
                   <>
                     {/* Sidebar */}
-                    <div className="w-48 flex-shrink-0 px-6 py-6 border-r border-gray-200/30 bg-white/30">
+                    <div className="w-48 flex-shrink-0 px-6 py-6 border-r border-gray-200/30 bg-[#d4e5d4]/50">
                       <div className="flex flex-col gap-2">
                         {categories.map((category) => (
                           <button
@@ -205,7 +205,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                     </div>
 
                     {/* Grid */}
-                    <div className="flex-1 overflow-y-auto px-8 py-6 bg-white/20">
+                    <div className="flex-1 overflow-y-auto px-8 py-6 bg-[#e8f0e8]/30">
                       {isLoadingGarments && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                           {Array.from({ length: 8 }).map((_, i) => (
@@ -249,8 +249,8 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                 )}
 
                 {viewMode === 'preview' && (
-                  <div className="flex flex-col w-full h-full bg-white/20">
-                    <div className="px-6 pt-2 pb-2">
+                  <div className="flex flex-col w-full bg-[#e8f0e8]/30 overflow-hidden">
+                    <div className="px-6 pt-2 pb-2 flex-shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -262,7 +262,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                       </Button>
                     </div>
 
-                    <div className="flex-1 flex items-center justify-center p-8 pt-4 min-h-[400px] overflow-auto">
+                    <div className="flex-1 flex flex-col items-center justify-center px-8 py-4 overflow-auto min-h-0">
                       {isGenerating && (
                         <div className="flex flex-col items-center justify-center w-full max-w-md px-6">
                           <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
@@ -272,13 +272,13 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                       )}
 
                       {!isGenerating && !error && mockupData && (
-                        <div className="relative w-full flex flex-col items-center justify-center">
+                        <div className="relative w-full flex flex-col items-center justify-center gap-4">
                           {/* PERFORMANCE FIX: Simplified preview container */}
                           <div className="relative rounded-xl bg-white/80 border border-white shadow-lg p-4 max-w-[90%] w-auto">
                             <img
                               src={mockupData.mockups[currentView] || ''}
                               alt={`${fabricName} - ${currentView}`}
-                              className="w-auto h-auto object-contain max-h-[60vh]"
+                              className="w-auto h-auto object-contain max-h-[50vh]"
                             />
 
                             {/* View Toggles */}
@@ -301,7 +301,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                             )}
                           </div>
 
-                          <div className="mt-6 flex gap-3 justify-center">
+                          <div className="flex-shrink-0 flex gap-3 justify-center pb-2">
                             {/* Download buttons remain same */}
                             <Button onClick={() => window.open(mockupData.mockups[currentView], '_blank')} variant="outline">
                               Download Image

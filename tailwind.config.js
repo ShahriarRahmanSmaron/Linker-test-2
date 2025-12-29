@@ -20,7 +20,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Nunito', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        display: ['Poppins', 'sans-serif'],
         heading: ['Montserrat', 'sans-serif'],
       },
       colors: {

@@ -373,26 +373,30 @@ export const BuyerDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold text-neutral-900 mb-2">Fab-Ai Library</h1>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold mb-2">
+                <span className="text-[#2563EB]">Fab</span>
+                <span className="text-[#16A34A]">-Ai</span>
+                <span className="text-neutral-900"> Library</span>
+              </h1>
               <p className="text-sm sm:text-base text-neutral-500">Search by fabrication, code, composition</p>
             </div>
 
             <div className="mb-6">
               <div className="relative max-w-2xl group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                  <Search className="h-5 w-5 text-accent-600 transition-colors duration-300 group-focus-within:text-accent-700" />
+                  <Search className="h-5 w-5 text-neutral-500 transition-colors duration-300 group-focus-within:text-neutral-700" />
                 </div>
                 <input
                   type="text"
                   id="fabric-search"
-                  className="peer block w-full pl-11 pr-4 pt-5 pb-2 border-2 border-accent-300/60 rounded-xl leading-5 bg-accent-50/20 text-neutral-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 transition-all duration-300 ease-in-out sm:text-sm shadow-sm placeholder-transparent"
+                  className="peer block w-full pl-11 pr-4 pt-5 pb-2 border-2 border-neutral-300 rounded-xl leading-5 bg-white text-neutral-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-500 transition-all duration-300 ease-in-out sm:text-sm shadow-sm placeholder-transparent"
                   placeholder="Search fabrics"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <label
                   htmlFor="fabric-search"
-                  className={`absolute left-11 transition-all duration-300 ease-out pointer-events-none text-accent-600 font-medium ${
+                  className={`absolute left-11 transition-all duration-300 ease-out pointer-events-none text-neutral-500 font-medium ${
                     searchTerm 
                       ? 'top-1.5 text-xs' 
                       : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs'
@@ -837,7 +841,7 @@ export const BuyerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 flex relative">
+    <div className="min-h-screen bg-[#e8f0e8] font-sans text-neutral-900 flex relative">
       {/* Mobile Sidebar Backdrop */}
       {sidebarOpen && (
         <div
@@ -850,15 +854,17 @@ export const BuyerDashboard: React.FC = () => {
       <div
         data-sidebar
         className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-neutral-200 flex flex-col transition-transform duration-300 ease-in-out`}
+          } fixed inset-y-0 left-0 z-50 w-64 bg-[#2563EB] border-r border-[#1D4ED8] flex flex-col transition-transform duration-300 ease-in-out`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-neutral-200">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary-50 rounded-lg">
-              <Layers className="w-6 h-6 text-primary-600" />
+        <div className="p-6 border-b border-[#1D4ED8]">
+          <div className="flex items-center">
+            <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
+              <span className="text-xl font-bold font-display">
+                <span className="text-[#2563EB]">Fab</span>
+                <span className="text-[#16A34A]">-Ai</span>
+              </span>
             </div>
-            <span className="text-xl font-bold text-neutral-900">Fab-Ai</span>
           </div>
         </div>
 
@@ -877,28 +883,30 @@ export const BuyerDashboard: React.FC = () => {
                     setSidebarOpen(false);
                   }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                  ? 'bg-primary-50 text-primary-700 font-semibold'
-                  : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-display ${isActive
+                  ? 'bg-[#16A34A]/30 text-white font-semibold'
+                  : 'text-white/70 hover:bg-[#16A34A]/20 hover:text-white'
                   }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="whitespace-nowrap">{item.label}</span>
+                <div className={`p-1.5 rounded-md ${isActive ? 'bg-[#16A34A]' : 'bg-[#16A34A]/40'}`}>
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                </div>
+                <span className="whitespace-nowrap font-medium">{item.label}</span>
               </button>
             );
           })}
         </nav>
 
         {/* User Info & Logout */}
-        <div className="p-4 border-t border-neutral-200">
-          <div className="mb-3 p-3 bg-neutral-50 rounded-lg">
-            <p className="text-xs text-neutral-500 mb-1 whitespace-nowrap">Logged in as</p>
-            <p className="text-sm font-semibold text-neutral-900 truncate">{user?.name || user?.email || 'User'}</p>
+        <div className="p-4 border-t border-[#2563EB]">
+          <div className="mb-3 p-3 bg-white/10 rounded-lg">
+            <p className="text-xs text-white/70 mb-1 whitespace-nowrap">Logged in as</p>
+            <p className="text-sm font-semibold text-white truncate">{user?.name || user?.email || 'User'}</p>
           </div>
           <Button
             variant="ghost"
             onClick={logout}
-            className="w-full flex items-center gap-2 justify-start text-neutral-600 hover:text-neutral-900"
+            className="w-full flex items-center gap-2 justify-start text-white/70 hover:text-white hover:bg-white/10"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
             <span className="whitespace-nowrap">Logout</span>
