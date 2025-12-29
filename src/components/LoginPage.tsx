@@ -5,6 +5,88 @@ import { useAuth } from './AuthContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
+// Floating Label Input Component
+interface FloatingInputProps {
+    id: string;
+    type: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    label: string;
+    required?: boolean;
+    minLength?: number;
+    icon?: React.ReactNode;
+}
+
+const FloatingInput: React.FC<FloatingInputProps> = ({
+    id,
+    type,
+    value,
+    onChange,
+    label,
+    required = false,
+    minLength,
+    icon
+}) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const isActive = isFocused || value.length > 0;
+
+    return (
+        <div className="relative group">
+            {/* Icon */}
+            {icon && (
+                <div className={cn(
+                    "absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 z-10",
+                    isActive ? "text-slate-600" : "text-slate-400"
+                )}>
+                    {icon}
+                </div>
+            )}
+            
+            {/* Input */}
+            <input
+                id={id}
+                type={type}
+                value={value}
+                onChange={onChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                required={required}
+                minLength={minLength}
+                className={cn(
+                    "peer w-full bg-slate-50 border text-slate-900 rounded-xl transition-all duration-300 h-14",
+                    "focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 focus:bg-white",
+                    "placeholder-transparent",
+                    icon ? "pl-10 pr-4 pt-5 pb-2" : "px-4 pt-5 pb-2",
+                    isActive ? "border-slate-400" : "border-slate-200"
+                )}
+                placeholder={label}
+            />
+            
+            {/* Floating Label */}
+            <label
+                htmlFor={id}
+                className={cn(
+                    "absolute transition-all duration-300 pointer-events-none",
+                    "text-slate-500 origin-left",
+                    icon ? "left-10" : "left-4",
+                    isActive
+                        ? "top-2 text-xs font-medium text-slate-600 scale-100"
+                        : "top-1/2 -translate-y-1/2 text-sm scale-100"
+                )}
+            >
+                {label}
+                {required && <span className="text-red-500 ml-0.5">*</span>}
+            </label>
+            
+            {/* Focus underline effect */}
+            <div className={cn(
+                "absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-gradient-to-r from-slate-400 via-slate-600 to-slate-400 rounded-full transition-all duration-300",
+                isFocused ? "w-[calc(100%-2rem)] opacity-100" : "w-0 opacity-0"
+            )} />
+        </div>
+    );
+};
+
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -158,83 +240,54 @@ export const LoginPage: React.FC = () => {
                 )}
 
                 {/* Custom Form */}
-                <form onSubmit={handleSubmit} className="w-full space-y-4">
-                    {/* Email Field */}
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                            Email
-                        </label>
-                        <div className="relative">
-                            <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
-                                placeholder="you@example.com"
-                            />
-                        </div>
-                    </div>
+                <form onSubmit={handleSubmit} className="w-full space-y-5">
+                    {/* Email Field with Floating Label */}
+                    <FloatingInput
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        label="Email"
+                        required
+                        icon={<Mail size={18} />}
+                    />
 
-                    {/* Password Field */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                minLength={6}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
-                                placeholder="••••••••"
-                            />
-                        </div>
-                    </div>
+                    {/* Password Field with Floating Label */}
+                    <FloatingInput
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        label="Password"
+                        required
+                        minLength={6}
+                        icon={<Lock size={18} />}
+                    />
 
-                    {/* Username (for signup) */}
+                    {/* Name (for signup) with Floating Label */}
                     {isSignUp && (
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                                Your Name <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    id="name"
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
-                                    placeholder="John Doe"
-                                />
-                            </div>
-                        </div>
+                        <FloatingInput
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            label="Your Name"
+                            required
+                            icon={<User size={18} />}
+                        />
                     )}
 
-                    {/* Company Name (for signup) */}
+                    {/* Company Name (for signup) with Floating Label */}
                     {isSignUp && (
-                        <div>
-                            <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                                Company Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                id="companyName"
-                                type="text"
-                                value={companyName}
-                                onChange={(e) => setCompanyName(e.target.value)}
-                                required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all h-11"
-                                placeholder="Your Company"
-                            />
-                        </div>
+                        <FloatingInput
+                            id="companyName"
+                            type="text"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            label="Company Name"
+                            required
+                            icon={<Building2 size={18} />}
+                        />
                     )}
 
                     {/* Submit Button */}

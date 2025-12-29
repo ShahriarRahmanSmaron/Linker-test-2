@@ -3,6 +3,85 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+// Floating Label Input Component for Admin (Dark Theme)
+interface FloatingInputProps {
+    id: string;
+    type: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    label: string;
+    required?: boolean;
+    icon?: React.ReactNode;
+}
+
+const FloatingInput: React.FC<FloatingInputProps> = ({
+    id,
+    type,
+    value,
+    onChange,
+    label,
+    required = false,
+    icon
+}) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const isActive = isFocused || value.length > 0;
+
+    return (
+        <div className="relative group">
+            {/* Icon */}
+            {icon && (
+                <div className={cn(
+                    "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
+                    isActive ? "text-red-400" : "text-neutral-500"
+                )}>
+                    {icon}
+                </div>
+            )}
+            
+            {/* Input */}
+            <input
+                id={id}
+                type={type}
+                value={value}
+                onChange={onChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                required={required}
+                className={cn(
+                    "peer w-full bg-neutral-900/50 border text-white rounded-xl transition-all duration-300 h-16",
+                    "focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500",
+                    "placeholder-transparent",
+                    icon ? "pl-11 pr-4 pt-6 pb-2" : "px-4 pt-6 pb-2",
+                    isActive ? "border-red-500/50" : "border-neutral-700"
+                )}
+                placeholder={label}
+            />
+            
+            {/* Floating Label */}
+            <label
+                htmlFor={id}
+                className={cn(
+                    "absolute transition-all duration-300 ease-out pointer-events-none",
+                    "origin-left",
+                    icon ? "left-11" : "left-4",
+                    isActive
+                        ? "top-2.5 text-[11px] font-bold uppercase tracking-wider text-red-400"
+                        : "top-1/2 -translate-y-1/2 text-sm text-neutral-500"
+                )}
+            >
+                {label}
+            </label>
+            
+            {/* Glow effect on focus */}
+            <div className={cn(
+                "absolute inset-0 rounded-xl transition-all duration-300 pointer-events-none",
+                isFocused ? "shadow-[0_0_20px_rgba(239,68,68,0.15)]" : ""
+            )} />
+        </div>
+    );
+};
 
 export const AdminLoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -67,35 +146,27 @@ export const AdminLoginPage: React.FC = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-neutral-500 uppercase ml-1">Admin Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500" size={18} />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-neutral-900/50 border border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all text-white placeholder-neutral-600"
-                                    placeholder="admin@fab-ai.co"
-                                />
-                            </div>
-                        </div>
+                        {/* Email Field with Floating Label */}
+                        <FloatingInput
+                            id="admin-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            label="Admin Email"
+                            required
+                            icon={<Mail size={18} />}
+                        />
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-neutral-500 uppercase ml-1">Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-500" size={18} />
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-neutral-900/50 border border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all text-white placeholder-neutral-600"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
+                        {/* Password Field with Floating Label */}
+                        <FloatingInput
+                            id="admin-password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            label="Password"
+                            required
+                            icon={<Lock size={18} />}
+                        />
 
                         {error && (
                             <div className="text-red-400 text-sm text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">
