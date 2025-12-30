@@ -264,10 +264,113 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
 
                     <div className="flex-1 flex flex-col items-center justify-center px-8 py-4 overflow-auto min-h-0">
                       {isGenerating && (
-                        <div className="flex flex-col items-center justify-center w-full max-w-md px-6">
-                          <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
-                          <p className="text-gray-700 font-medium mb-2 text-lg">Generating mockup...</p>
-                          <p className="text-gray-500 text-sm text-center">Processing fabric visualization...</p>
+                        <div className="relative w-full flex flex-col items-center justify-center gap-4">
+                          {/* Skeleton box matching mockup preview */}
+                          <div className="relative rounded-xl bg-white/80 border border-white shadow-lg p-4 max-w-[90%] w-auto">
+                            {/* Skeleton placeholder */}
+                            <div className="w-[300px] h-[50vh] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg animate-pulse flex flex-col items-center justify-center">
+                              {/* Magic Hat with Rotating Wand Animation */}
+                              <div className="relative w-28 h-28 mb-6">
+                                {/* Magic Hat SVG - Classic Magician Style */}
+                                <svg viewBox="0 0 100 100" className="w-full h-full">
+                                  {/* Hat brim shadow */}
+                                  <ellipse cx="50" cy="78" rx="42" ry="10" fill="#2a2a2a" opacity="0.3" />
+                                  {/* Hat brim */}
+                                  <ellipse cx="50" cy="75" rx="40" ry="8" fill="url(#hatBrimGradient)" />
+                                  {/* Hat body */}
+                                  <path d="M28 75 L35 28 L65 28 L72 75 Z" fill="url(#hatBodyGradient)" />
+                                  {/* Hat top */}
+                                  <ellipse cx="50" cy="28" rx="15" ry="5" fill="#3a3a3a" />
+                                  {/* Red band */}
+                                  <rect x="33" y="58" width="34" height="10" rx="1" fill="url(#redBandGradient)" />
+                                  {/* Gold star on hat */}
+                                  <polygon points="38,42 40,47 45,47.5 41,51 42,56 38,53 34,56 35,51 31,47.5 36,47" fill="#ffd700" />
+                                  {/* Purple feather */}
+                                  <path d="M62 25 Q75 15, 70 35 Q68 28, 65 32 Q67 22, 62 25" fill="url(#featherGradient)" />
+                                  <path d="M64 28 Q72 22, 68 33" stroke="#6b21a8" strokeWidth="0.5" fill="none" />
+                                  
+                                  {/* Sparkles around hat */}
+                                  <g className="animate-pulse">
+                                    <circle cx="18" cy="45" r="2" fill="#ffd700" opacity="0.9" />
+                                    <circle cx="82" cy="50" r="1.5" fill="#ffd700" opacity="0.8" />
+                                    <circle cx="78" cy="22" r="2" fill="#ffd700" opacity="0.7" />
+                                    <circle cx="22" cy="60" r="1.5" fill="#ffd700" opacity="0.8" />
+                                  </g>
+                                  
+                                  {/* Gradients */}
+                                  <defs>
+                                    <linearGradient id="hatBrimGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                      <stop offset="0%" stopColor="#1a1a1a" />
+                                      <stop offset="50%" stopColor="#4a4a4a" />
+                                      <stop offset="100%" stopColor="#1a1a1a" />
+                                    </linearGradient>
+                                    <linearGradient id="hatBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                      <stop offset="0%" stopColor="#5a5a5a" />
+                                      <stop offset="30%" stopColor="#3a3a3a" />
+                                      <stop offset="70%" stopColor="#2a2a2a" />
+                                      <stop offset="100%" stopColor="#1a1a1a" />
+                                    </linearGradient>
+                                    <linearGradient id="redBandGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                      <stop offset="0%" stopColor="#ef4444" />
+                                      <stop offset="50%" stopColor="#dc2626" />
+                                      <stop offset="100%" stopColor="#b91c1c" />
+                                    </linearGradient>
+                                    <linearGradient id="featherGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                      <stop offset="0%" stopColor="#9333ea" />
+                                      <stop offset="50%" stopColor="#7c3aed" />
+                                      <stop offset="100%" stopColor="#6b21a8" />
+                                    </linearGradient>
+                                  </defs>
+                                </svg>
+                                
+                                {/* Rotating Magic Wand - Black */}
+                                <div className="absolute top-0 left-[60%] -translate-x-1/2 origin-bottom animate-[wandWave_2s_ease-in-out_infinite]">
+                                  <svg viewBox="0 0 40 80" className="w-8 h-16">
+                                    {/* Wand stick - Black */}
+                                    <rect x="17" y="25" width="6" height="50" rx="2" fill="url(#wandGradientBlack)" />
+                                    {/* White tip */}
+                                    <rect x="17" y="25" width="6" height="8" rx="2" fill="#ffffff" />
+                                    {/* Wand tip glow */}
+                                    <circle cx="20" cy="20" r="6" fill="url(#glowGradientGold)" className="animate-pulse" />
+                                    {/* Sparkle at tip */}
+                                    <polygon points="20,12 21,17 26,17.5 22,20 23,25 20,22 17,25 18,20 14,17.5 19,17" fill="#ffd700" />
+                                    {/* Mini sparkles from wand */}
+                                    <g className="animate-ping">
+                                      <circle cx="28" cy="14" r="1.5" fill="#ffd700" />
+                                      <circle cx="12" cy="16" r="1" fill="#ffd700" />
+                                      <circle cx="26" cy="22" r="1" fill="#fff9c4" />
+                                    </g>
+                                    
+                                    <defs>
+                                      <linearGradient id="wandGradientBlack" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#1a1a1a" />
+                                        <stop offset="50%" stopColor="#3a3a3a" />
+                                        <stop offset="100%" stopColor="#1a1a1a" />
+                                      </linearGradient>
+                                      <radialGradient id="glowGradientGold" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stopColor="#fff9c4" />
+                                        <stop offset="50%" stopColor="#ffd700" stopOpacity="0.6" />
+                                        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                                      </radialGradient>
+                                    </defs>
+                                  </svg>
+                                </div>
+                              </div>
+                              
+                              {/* Animated text - Montserrat Bold Black */}
+                              <p className="font-montserrat font-bold text-xl text-black">
+                                Creating Fab-Ai Magic
+                              </p>
+                              
+                              {/* CSS for wand animation */}
+                              <style>{`
+                                @keyframes wandWave {
+                                  0%, 100% { transform: translateX(-50%) rotate(-15deg); }
+                                  50% { transform: translateX(-50%) rotate(15deg); }
+                                }
+                              `}</style>
+                            </div>
+                          </div>
                         </div>
                       )}
 

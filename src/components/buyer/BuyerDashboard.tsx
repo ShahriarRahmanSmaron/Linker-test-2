@@ -382,36 +382,45 @@ export const BuyerDashboard: React.FC = () => {
             </div>
 
             <div className="mb-6">
-              <div className="relative max-w-2xl group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                  <Search className="h-5 w-5 text-neutral-500 transition-colors duration-300 group-focus-within:text-neutral-700" />
+              <div className="flex items-center gap-3 max-w-2xl">
+                <div className="relative flex-1 group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                    <Search className="h-5 w-5 text-neutral-500 transition-colors duration-300 group-focus-within:text-neutral-700" />
+                  </div>
+                  <input
+                    type="text"
+                    id="fabric-search"
+                    className="peer block w-full pl-11 pr-4 pt-5 pb-2 border-2 border-neutral-300 rounded-xl leading-5 bg-white text-neutral-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-500 transition-all duration-300 ease-in-out sm:text-sm shadow-sm placeholder-transparent"
+                    placeholder="Search fabrics"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <label
+                    htmlFor="fabric-search"
+                    className={`absolute left-11 transition-all duration-300 ease-out pointer-events-none text-neutral-500 font-medium ${
+                      searchTerm 
+                        ? 'top-1.5 text-xs' 
+                        : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs'
+                    }`}
+                  >
+                    Search fabrics
+                  </label>
                 </div>
-                <input
-                  type="text"
-                  id="fabric-search"
-                  className="peer block w-full pl-11 pr-4 pt-5 pb-2 border-2 border-neutral-300 rounded-xl leading-5 bg-white text-neutral-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-neutral-400/30 focus:border-neutral-500 transition-all duration-300 ease-in-out sm:text-sm shadow-sm placeholder-transparent"
-                  placeholder="Search fabrics"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <label
-                  htmlFor="fabric-search"
-                  className={`absolute left-11 transition-all duration-300 ease-out pointer-events-none text-neutral-500 font-medium ${
-                    searchTerm 
-                      ? 'top-1.5 text-xs' 
-                      : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-xs'
-                  }`}
-                >
-                  Search fabrics
-                </label>
+                {/* Compact filters trigger for smaller screens */}
+                <div className="md:hidden">
+                  <SearchFilters
+                    filters={filters}
+                    setFilters={setFilters}
+                  />
+                </div>
               </div>
-            </div>
-
-            <div className="mb-6">
-              <SearchFilters
-                filters={filters}
-                setFilters={setFilters}
-              />
+              {/* Full-width filters bar for desktop screens */}
+              <div className="hidden md:block max-w-2xl mt-3">
+                <SearchFilters
+                  filters={filters}
+                  setFilters={setFilters}
+                />
+              </div>
             </div>
 
             {fabrics.length > 0 && (
