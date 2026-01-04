@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Fabric } from '../types';
-import { X, Shirt, ZoomIn, Check, Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { X, Shirt, ZoomIn, Check, Plus, Loader2, ArrowLeft, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from './ui/dialog';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { Skeleton } from './ui/Skeleton';
 import { api } from '../lib/api';
+import { TechpackPromptModal } from './TechpackPromptModal';
 
 interface MockupModalProps {
   fabric: Fabric | null;
@@ -48,6 +49,8 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'face' | 'back' | 'single'>('face');
+  const [showTechpackModal, setShowTechpackModal] = useState(false);
+  const [currentGarmentName, setCurrentGarmentName] = useState<string>('');
 
   useEffect(() => {
     if (!fabric) {
@@ -92,6 +95,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
       setIsGenerating(true);
       setError(null);
       setSelectedGarment(garment.displayName);
+      setCurrentGarmentName(garment.name);
       setViewMode('preview');
 
       const fabricRef = fabric.ref || fabric.id;
@@ -288,7 +292,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                                   {/* Purple feather */}
                                   <path d="M62 25 Q75 15, 70 35 Q68 28, 65 32 Q67 22, 62 25" fill="url(#featherGradient)" />
                                   <path d="M64 28 Q72 22, 68 33" stroke="#6b21a8" strokeWidth="0.5" fill="none" />
-                                  
+
                                   {/* Sparkles around hat */}
                                   <g className="animate-pulse">
                                     <circle cx="18" cy="45" r="2" fill="#ffd700" opacity="0.9" />
@@ -296,7 +300,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                                     <circle cx="78" cy="22" r="2" fill="#ffd700" opacity="0.7" />
                                     <circle cx="22" cy="60" r="1.5" fill="#ffd700" opacity="0.8" />
                                   </g>
-                                  
+
                                   {/* Gradients */}
                                   <defs>
                                     <linearGradient id="hatBrimGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -322,7 +326,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                                     </linearGradient>
                                   </defs>
                                 </svg>
-                                
+
                                 {/* Rotating Magic Wand - Black */}
                                 <div className="absolute top-0 left-[60%] -translate-x-1/2 origin-bottom animate-[wandWave_2s_ease-in-out_infinite]">
                                   <svg viewBox="0 0 40 80" className="w-8 h-16">
@@ -340,7 +344,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                                       <circle cx="12" cy="16" r="1" fill="#ffd700" />
                                       <circle cx="26" cy="22" r="1" fill="#fff9c4" />
                                     </g>
-                                    
+
                                     <defs>
                                       <linearGradient id="wandGradientBlack" x1="0%" y1="0%" x2="100%" y2="0%">
                                         <stop offset="0%" stopColor="#1a1a1a" />
@@ -356,12 +360,12 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                                   </svg>
                                 </div>
                               </div>
-                              
+
                               {/* Animated text - Montserrat Bold Black */}
                               <p className="font-montserrat font-bold text-xl text-black">
                                 Creating Fab-Ai Magic
                               </p>
-                              
+
                               {/* CSS for wand animation */}
                               <style>{`
                                 @keyframes wandWave {
@@ -405,9 +409,16 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                           </div>
 
                           <div className="flex-shrink-0 flex gap-3 justify-center pb-2">
-                            {/* Download buttons remain same */}
+                            {/* Download buttons */}
                             <Button onClick={() => window.open(mockupData.mockups[currentView], '_blank')} variant="outline">
                               Download Image
+                            </Button>
+                            <Button
+                              onClick={() => setShowTechpackModal(true)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <FileText size={16} className="mr-2" />
+                              Download Techpack
                             </Button>
                           </div>
                         </div>
@@ -420,6 +431,17 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
           </div>
         </div>
       </DialogContent>
+
+      {/* Techpack Prompt Modal */}
+      {fabric && mockupData && (
+        <TechpackPromptModal
+          isOpen={showTechpackModal}
+          onClose={() => setShowTechpackModal(false)}
+          mockupData={mockupData.mockups}
+          fabricRef={fabric.ref || fabric.id}
+          garmentName={currentGarmentName}
+        />
+      )}
     </Dialog>
   );
 };

@@ -74,7 +74,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize Extensions
 db.init_app(app)  # type: ignore[arg-type]
 migrate = Migrate(app, db)  # type: ignore[arg-type] # Architecture: Enable database migrations
-
+# Register techpack routes blueprint
+from techpack_routes import techpack_bp
+app.register_blueprint(techpack_bp)
 # Security: Rate Limiting
 limiter = Limiter(
     get_remote_address,

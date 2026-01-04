@@ -125,7 +125,7 @@ const MOCK_DATA: BuyerDashboardData = {
   buyer_dashboard: {
     user_profile: {
       id: "BUYER-882",
-      company: "Shahriar",
+      company: "Fab-Ai",
       tier: "Gold"
     },
     stats: {

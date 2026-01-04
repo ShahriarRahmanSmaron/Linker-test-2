@@ -36,6 +36,7 @@ Pillow>=10.0.0
 
 # PDF Generation
 reportlab>=4.0.0
+PyMuPDF>=1.23.0  # For PDF form field flattening (fitz)
 
 # PowerPoint Generation
 python-pptx>=0.6.21
