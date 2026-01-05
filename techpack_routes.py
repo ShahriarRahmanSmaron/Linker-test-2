@@ -35,7 +35,7 @@ def create_techpack_pdf_with_data(mockup_paths, fabric_ref, garment_name, form_d
         mockup_paths: dict with keys 'face', 'back', 'single' containing image paths
         fabric_ref: Fabric reference code
         garment_name: Name of the garment
-        form_data: dict with style, buyer, size, gender, sampleStatus, season, styleName, designSource
+        form_data: dict with fabrication, style, buyer, size, gender, sampleStatus, season, styleName, designerName
     
     Returns:
         Path to generated PDF, or None on failure
@@ -63,8 +63,9 @@ def create_techpack_pdf_with_data(mockup_paths, fabric_ref, garment_name, form_d
         
         # Map our form_data keys to the PDF field names (as created in Acrobat)
         # Field names in PDF match our camelCase keys exactly:
-        # style, buyer, sampleStatus, season, gender, size, styleName, designSource
+        # fabrication, style, buyer, sampleStatus, season, gender, size, styleName, designerName
         field_mapping = {
+            'fabrication': 'fabrication',
             'style': 'style',
             'buyer': 'buyer', 
             'sampleStatus': 'sampleStatus',
@@ -72,7 +73,7 @@ def create_techpack_pdf_with_data(mockup_paths, fabric_ref, garment_name, form_d
             'gender': 'gender',
             'size': 'size',
             'styleName': 'styleName',
-            'designSource': 'designSource',
+            'designerName': 'designerName',
         }
         
         # Fill the form fields with specific appearance (Nunito Bold font)
@@ -160,16 +161,28 @@ def create_techpack_pdf_with_data(mockup_paths, fabric_ref, garment_name, form_d
         # This converts form widgets to static page content for Illustrator
         # ============================================================
         doc = fitz.open(temp_pdf_path)
+        
+        # Create a new PDF without form fields by converting to images and back
+        # This is the most reliable way to flatten for Illustrator compatibility
+        new_doc = fitz.open()
+        
         for page_num in range(len(doc)):
             page = doc[page_num]
-            # Get all widget annotations and flatten them
-            for widget in page.widgets():
-                widget.update()  # Ensure appearance is current
-            # Remove all form widgets by flattening
-            page.wrap_contents()
+            
+            # Render page to high-resolution pixmap (including form field values)
+            # The filled form fields will be rendered as part of the image
+            mat = fitz.Matrix(2, 2)  # 2x scale for quality (144 DPI)
+            pix = page.get_pixmap(matrix=mat, alpha=False)
+            
+            # Create a new page with same dimensions
+            new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+            
+            # Insert the rendered image onto the new page
+            new_page.insert_image(new_page.rect, pixmap=pix)
         
-        # Save the flattened PDF
-        doc.save(pdf_path, garbage=4, deflate=True)
+        # Save the flattened PDF (pure image-based, no form fields)
+        new_doc.save(pdf_path, garbage=4, deflate=True)
+        new_doc.close()
         doc.close()
         
         # Clean up temp file

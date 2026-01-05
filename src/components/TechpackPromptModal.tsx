@@ -14,9 +14,11 @@ interface TechpackPromptModalProps {
     };
     fabricRef: string;
     garmentName: string;
+    fabrication?: string; // Auto-fill from database
 }
 
 interface TechpackFormData {
+    fabrication: string;
     style: string;
     buyer: string;
     size: string;
@@ -24,7 +26,7 @@ interface TechpackFormData {
     sampleStatus: string;
     season: string;
     styleName: string;
-    designSource: string;
+    designerName: string;
 }
 
 export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
@@ -33,8 +35,10 @@ export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
     mockupData,
     fabricRef,
     garmentName,
+    fabrication: initialFabrication = '',
 }) => {
     const [formData, setFormData] = useState<TechpackFormData>({
+        fabrication: initialFabrication,
         style: '',
         buyer: '',
         size: 'M',
@@ -42,7 +46,7 @@ export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
         sampleStatus: '',
         season: '',
         styleName: '',
-        designSource: 'Internal',
+        designerName: '',
     });
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -120,6 +124,19 @@ export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {/* Fabrication - full width at top */}
+                    <div>
+                        <label className={labelClass}>Fabrication</label>
+                        <input
+                            type="text"
+                            name="fabrication"
+                            value={formData.fabrication}
+                            onChange={handleChange}
+                            className={inputClass}
+                            placeholder="e.g., 100% Cotton Jersey"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className={labelClass}>Style</label>
@@ -208,14 +225,14 @@ export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
                             />
                         </div>
                         <div>
-                            <label className={labelClass}>Design Source</label>
+                            <label className={labelClass}>Designer Name</label>
                             <input
                                 type="text"
-                                name="designSource"
-                                value={formData.designSource}
+                                name="designerName"
+                                value={formData.designerName}
                                 onChange={handleChange}
                                 className={inputClass}
-                                placeholder="e.g., Internal"
+                                placeholder="e.g., John Doe"
                             />
                         </div>
                     </div>

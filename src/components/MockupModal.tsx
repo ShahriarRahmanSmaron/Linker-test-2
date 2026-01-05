@@ -440,6 +440,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
           mockupData={mockupData.mockups}
           fabricRef={fabric.ref || fabric.id}
           garmentName={currentGarmentName}
+          fabrication={fabricComposition}
         />
       )}
     </Dialog>
