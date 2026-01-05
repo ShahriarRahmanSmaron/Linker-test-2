@@ -1,9 +1,0 @@
-# Allowed Company Domains for Verified Buyer Status
-# One domain per line, without @ symbol
-# Lines starting with # are ignored
-# Example: tesla.com, nike.com, adidas.com
-
-# Add your verified company domains below:
-example.com
-acme.com
-
