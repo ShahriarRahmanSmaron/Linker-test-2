@@ -156,16 +156,16 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
           {/* PERFORMANCE FIX: Replaced custom glass styles with optimized .glass-panel class from index.css */}
           <div className="relative rounded-3xl overflow-hidden glass-panel shadow-2xl">
             {/* Simple gradient background instead of complex light refraction layers */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0e8] to-[#d4e5d4] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#F2F1ED] to-[#E6E5E1] pointer-events-none"></div>
 
             <div className="relative flex flex-col h-full max-h-[95vh]">
               {/* Header */}
               <div className="flex items-start justify-between px-6 pt-4 pb-3 border-b border-gray-200/30">
                 <div>
                   <div className="flex items-baseline gap-2 mb-0.5">
-                    <h2 className="text-xl font-bold text-gray-900">Fabrication :</h2>
+                    <h2 className="text-xl font-display font-bold text-gray-900">Fabrication :</h2>
                     {fabricComposition && (
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-display font-medium text-gray-700">
                         {fabricComposition}
                       </span>
                     )}
@@ -188,17 +188,17 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                 {viewMode === 'select' && (
                   <>
                     {/* Sidebar */}
-                    <div className="w-48 flex-shrink-0 px-6 py-6 border-r border-gray-200/30 bg-[#d4e5d4]/50">
+                    <div className="w-48 flex-shrink-0 px-6 py-6 border-r border-gray-200/30 bg-[#E6E5E1]/50">
                       <div className="flex flex-col gap-2">
                         {categories.map((category) => (
                           <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`
-                            px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left
+                            px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left border
                             ${selectedCategory === category
-                                ? 'bg-blue-600 text-white shadow-md'
-                                : 'text-gray-700 hover:bg-white/40'
+                                ? 'bg-[#F5F5F0] border-neutral-900 text-neutral-900 shadow-sm font-bold'
+                                : 'border-transparent text-gray-700 hover:bg-[#F5F5F0] hover:text-neutral-900'
                               }
                           `}
                           >
@@ -209,7 +209,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                     </div>
 
                     {/* Grid */}
-                    <div className="flex-1 overflow-y-auto px-8 py-6 bg-[#e8f0e8]/30">
+                    <div className="flex-1 overflow-y-auto px-8 py-6 bg-[#F2F1ED]/30">
                       {isLoadingGarments && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                           {Array.from({ length: 8 }).map((_, i) => (
@@ -224,23 +224,22 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                             <button
                               key={garment.name}
                               onClick={() => handleGarmentSelect(garment)}
-                              // PERFORMANCE FIX: Removed backdrop-filter, used solid colors with opacity
-                              className="group relative aspect-square rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg bg-white/60 border border-white/50 hover:border-green-400/50 hover:bg-white/80 overflow-hidden"
+                              className="group relative flex flex-col bg-white rounded-xl border border-gray-200 p-3 transition-all duration-300 hover:shadow-lg hover:border-blue-500/30"
                             >
-                              <div className="w-full h-full flex flex-col items-center justify-center p-3">
-                                <div className="flex-1 w-full flex items-center justify-center mb-2 overflow-hidden">
-                                  {garment.imageUrl ? (
-                                    <img
-                                      src={garment.imageUrl}
-                                      alt={garment.displayName}
-                                      className="w-full h-full object-contain"
-                                      loading="lazy"
-                                    />
-                                  ) : (
-                                    <Shirt size={40} className="text-gray-400" />
-                                  )}
-                                </div>
-                                <p className="text-xs font-medium text-gray-800 text-center">
+                              <div className="w-full aspect-square bg-gray-50 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:bg-gray-100 transition-colors">
+                                {garment.imageUrl ? (
+                                  <img
+                                    src={garment.imageUrl}
+                                    alt={garment.displayName}
+                                    className="w-full h-full object-contain p-2 mix-blend-multiply"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <Shirt size={40} className="text-gray-400" />
+                                )}
+                              </div>
+                              <div className="w-full text-left">
+                                <p className="text-sm font-semibold text-gray-900">
                                   {garment.displayName}
                                 </p>
                               </div>
@@ -253,7 +252,7 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                 )}
 
                 {viewMode === 'preview' && (
-                  <div className="flex flex-col w-full bg-[#e8f0e8]/30 overflow-hidden">
+                  <div className="flex flex-col w-full bg-[#F2F1ED]/30 overflow-hidden">
                     <div className="px-6 pt-2 pb-2 flex-shrink-0">
                       <Button
                         variant="ghost"

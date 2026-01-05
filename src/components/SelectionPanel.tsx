@@ -23,19 +23,19 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
   }, [selectedFabrics.length]);
 
   if (selectedFabrics.length === 0) return null;
-  
+
   // Check if user is verified buyer (can request samples)
   const isVerifiedBuyer = canRequestSamples;
 
   return (
-    <div className={`fixed z-40 transition-all duration-500 ease-in-out shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]
+    <div className={`fixed z-[60] transition-all duration-500 ease-in-out shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]
       md:right-6 md:top-auto md:bottom-6 md:w-80 md:bg-white md:rounded-2xl md:border md:border-neutral-200
-      bottom-0 left-0 right-0 bg-white border-t border-neutral-200
+      bottom-0 left-0 right-0 bg-white border-t border-neutral-200 flex flex-col max-h-[calc(100vh-24px)]
       ${isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-68px)] md:translate-y-[calc(100%-68px)]'}
     `}>
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 border-b border-neutral-100 cursor-pointer bg-white rounded-t-2xl hover:bg-neutral-50/50 transition-colors group"
+        className="flex-shrink-0 flex items-center justify-between p-4 border-b border-neutral-100 cursor-pointer bg-white rounded-t-2xl hover:bg-neutral-50/50 transition-colors group"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center">
@@ -53,7 +53,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
       </div>
 
       {/* Content */}
-      <div className="p-3 overflow-y-auto max-h-[40vh] md:max-h-[300px] space-y-2 bg-neutral-50/50">
+      <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-2 bg-neutral-50/50">
         {selectedFabrics.map(fabric => {
           const fabricId = fabric.ref || fabric.id;
           const fabricName = fabric.name || fabric.ref;
@@ -90,7 +90,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onRemove(fabricId); }}
-                className="text-neutral-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors active:scale-90"
+                className="text-neutral-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors active:scale-90 cursor-pointer z-10"
                 title="Remove item"
               >
                 <X size={14} />
@@ -101,7 +101,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-neutral-100 bg-white rounded-b-2xl">
+      <div className="flex-shrink-0 p-4 border-t border-neutral-100 bg-white rounded-b-2xl">
         {/* Verification Warning for General Users */}
         {!isVerifiedBuyer && user?.role === 'general_user' && (
           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
@@ -116,13 +116,12 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
             </div>
           </div>
         )}
-        
+
         <Button
-          className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all duration-200 mb-3 ${
-            isVerifiedBuyer 
+          className={`w-full py-3.5 rounded-xl font-bold text-sm shadow-xl transition-all duration-200 mb-3 ${isVerifiedBuyer
               ? 'bg-neutral-900 text-white shadow-neutral-900/10 hover:bg-black hover:scale-[1.02] hover:shadow-2xl hover:shadow-neutral-900/20 active:scale-95'
               : 'bg-neutral-300 text-neutral-500 cursor-not-allowed shadow-none'
-          }`}
+            }`}
           onClick={() => {
             if (isVerifiedBuyer) {
               toast.success('Sample request initiated!', {
@@ -139,7 +138,7 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
         >
           {isVerifiedBuyer ? 'Request Samples' : 'Verify Email to Request Samples'}
         </Button>
-        
+
         <Button
           className="w-full bg-neutral-100 text-neutral-700 py-3.5 rounded-xl font-bold text-sm hover:bg-neutral-200 hover:scale-[1.02] active:scale-95 transition-all duration-200 mb-3"
           onClick={() => toast.success('Moodboard creation demo!', {
@@ -148,12 +147,12 @@ export const SelectionPanel: React.FC<SelectionPanelProps> = ({ selectedFabrics,
         >
           Create Moodboard
         </Button>
-        
+
         <Button
           variant="ghost"
           size="sm"
           onClick={onClear}
-          className="w-full flex items-center justify-center text-neutral-400 text-xs font-medium hover:text-red-500 py-1.5 rounded-lg hover:bg-red-50"
+          className="w-full flex items-center justify-center text-neutral-400 text-xs font-medium hover:text-red-500 py-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
         >
           <Trash2 size={12} className="mr-1.5" /> Clear Selection
         </Button>

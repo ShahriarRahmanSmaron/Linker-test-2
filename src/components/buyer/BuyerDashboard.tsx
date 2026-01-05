@@ -716,8 +716,8 @@ export const BuyerDashboard: React.FC = () => {
       {/* Selection Panel */}
       <SelectionPanel
         selectedFabrics={selectedFabrics}
-        onClearSelection={() => setSelectedFabrics([])}
-        onRemoveFabric={(id) => setSelectedFabrics(selectedFabrics.filter(f => (f.ref || f.id) !== id))}
+        onClear={() => setSelectedFabrics([])}
+        onRemove={(id) => setSelectedFabrics(selectedFabrics.filter(f => (f.ref || f.id) !== id))}
         onGenerateMockup={() => {
           if (selectedFabrics.length > 0) {
             setMockupModalFabric(selectedFabrics[0]);
