@@ -30,7 +30,7 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
-import { SearchFilters } from '../SearchFilters';
+import { SidebarFilters } from '../SidebarFilters';
 import { SearchFabricCard } from '../SearchFabricCard';
 import { SelectionPanel } from '../SelectionPanel';
 import { MockupModal } from '../MockupModal';
@@ -214,7 +214,7 @@ export const BuyerDashboard: React.FC = () => {
   const [mockupModalFabric, setMockupModalFabric] = useState<Fabric | null>(null);
   const [techpackModalFabric, setTechpackModalFabric] = useState<Fabric | null>(null);
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
@@ -263,19 +263,6 @@ export const BuyerDashboard: React.FC = () => {
 
   // Fetch fabrics for search
   React.useEffect(() => {
-    const hasSearchCriteria = searchTerm.trim() !== '' ||
-      filters.fabrication !== '' ||
-      filters.type !== '' ||
-      filters.gsmRange !== '';
-
-    if (!hasSearchCriteria) {
-      setFabrics([]);
-      setHasMore(false);
-      setTotalResults(0);
-      setIsLoading(false);
-      return;
-    }
-
     const fetchFabrics = async () => {
       try {
         setIsLoading(true);
@@ -364,114 +351,114 @@ export const BuyerDashboard: React.FC = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
+
+                  {/* Feature Points */}
+                  <div className="flex flex-wrap gap-x-6 gap-y-3 mt-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-gray-300">Search or Filter Fabrics</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-gray-300">Open Fabric Viewer</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-gray-300">Generate Mockup or Moodboard</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm text-gray-300">Download Image or Techpack</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Getting Started Strip */}
-            <div className="bg-white border-b border-neutral-200 py-4 px-4 overflow-x-auto">
-              <div className="max-w-7xl mx-auto min-w-max flex justify-center gap-8 text-sm text-neutral-600">
-                <div className="flex items-center gap-2">
-                  <span className="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded text-xs font-bold border border-neutral-200">1</span>
-                  <span>Search or Filter Fabrics</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded text-xs font-bold border border-neutral-200">2</span>
-                  <span>Open Fabric Viewer</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded text-xs font-bold border border-neutral-200">3</span>
-                  <span>Generate Mockup or Moodboard</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded text-xs font-bold border border-neutral-200">4</span>
-                  <span>Download Image or Techpack</span>
-                </div>
-              </div>
-            </div>
+
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="mb-6">
-                {/* Compact filters trigger for smaller screens */}
-                <div className="md:hidden">
-                  <SearchFilters
+              <div className="flex flex-col lg:flex-row">
+                {/* Left Sidebar */}
+                <aside className="w-full lg:w-64 flex-shrink-0 mb-8 lg:mb-0">
+                  <SidebarFilters
                     filters={filters}
                     setFilters={setFilters}
+                    totalResults={totalResults}
                   />
-                </div>
-                {/* Full-width filters bar for desktop screens */}
-                <div className="hidden md:block">
-                  <SearchFilters
-                    filters={filters}
-                    setFilters={setFilters}
-                  />
+                </aside>
+
+                {/* Divider Line */}
+                <div className="hidden lg:block w-px bg-neutral-200 mx-8 self-stretch" />
+
+                {/* Right Content Grid */}
+                <div className="flex-1">
+                  {fabrics.length > 0 && (
+                    <div className="flex justify-end items-center mb-4">
+                      <span className="text-sm font-medium text-neutral-500">
+                        {totalResults} Fabrics
+                      </span>
+                    </div>
+                  )}
+
+                  {fabrics.length === 0 && !isLoading && (searchTerm || filters.fabrication || filters.type || filters.gsmRange) && (
+                    <div className="text-center py-12">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
+                        <Search className="w-8 h-8 text-neutral-400" />
+                      </div>
+                      <p className="text-neutral-500">No fabrics found. Try adjusting your search.</p>
+                    </div>
+                  )}
+
+                  {fabrics.length === 0 && !isLoading && !searchTerm && !filters.fabrication && !filters.type && !filters.gsmRange && (
+                    <div className="text-center py-12">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
+                        <Search className="w-8 h-8 text-neutral-400" />
+                      </div>
+                      <p className="text-neutral-500 font-medium">No fabrics found</p>
+                    </div>
+                  )}
+
+                  {isLoading && fabrics.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"></div>
+                      <p className="text-neutral-500 mt-4">Searching fabrics...</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    {fabrics.map((fabric) => {
+                      const fabricId = fabric.ref || fabric.id;
+                      return (
+                        <SearchFabricCard
+                          key={fabricId}
+                          fabric={fabric}
+                          isSelected={!!selectedFabrics.find(f => (f.ref || f.id) === fabricId)}
+                          onToggleSelect={(f) => {
+                            const id = f.ref || f.id;
+                            if (selectedFabrics.find(sf => (sf.ref || sf.id) === id)) {
+                              setSelectedFabrics(selectedFabrics.filter(sf => (sf.ref || sf.id) !== id));
+                            } else {
+                              setSelectedFabrics([...selectedFabrics, f]);
+                            }
+                          }}
+                          onOpenMockup={setMockupModalFabric}
+                          onOpenTechpack={setTechpackModalFabric}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {hasMore && (
+                    <div className="text-center py-8">
+                      <Button onClick={handleLoadMore} variant="outline" disabled={isLoading} className="min-w-[200px]">
+                        {isLoading ? 'Loading...' : 'Load More Fabrics'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {fabrics.length > 0 && (
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-sm text-neutral-500">
-                    {totalResults} {totalResults === 1 ? 'fabric' : 'fabrics'} found
-                  </p>
-                </div>
-              )}
-
-              {fabrics.length === 0 && !isLoading && (searchTerm || filters.fabrication || filters.type || filters.gsmRange) && (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
-                    <Search className="w-8 h-8 text-neutral-400" />
-                  </div>
-                  <p className="text-neutral-500">No fabrics found. Try adjusting your search.</p>
-                </div>
-              )}
-
-              {fabrics.length === 0 && !isLoading && !searchTerm && !filters.fabrication && !filters.type && !filters.gsmRange && (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
-                    <Search className="w-8 h-8 text-neutral-400" />
-                  </div>
-                  <p className="text-neutral-500 font-medium">Start Your Fabric Search</p>
-                </div>
-              )}
-
-              {isLoading && fabrics.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"></div>
-                  <p className="text-neutral-500 mt-4">Searching fabrics...</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                {fabrics.map((fabric) => {
-                  const fabricId = fabric.ref || fabric.id;
-                  return (
-                    <SearchFabricCard
-                      key={fabricId}
-                      fabric={fabric}
-                      isSelected={!!selectedFabrics.find(f => (f.ref || f.id) === fabricId)}
-                      onToggleSelect={(f) => {
-                        const id = f.ref || f.id;
-                        if (selectedFabrics.find(sf => (sf.ref || sf.id) === id)) {
-                          setSelectedFabrics(selectedFabrics.filter(sf => (sf.ref || sf.id) !== id));
-                        } else {
-                          setSelectedFabrics([...selectedFabrics, f]);
-                        }
-                      }}
-                      onOpenMockup={setMockupModalFabric}
-                      onOpenTechpack={setTechpackModalFabric}
-                    />
-                  );
-                })}
-              </div>
-
-              {hasMore && (
-                <div className="text-center py-4">
-                  <Button onClick={handleLoadMore} variant="outline" disabled={isLoading}>
-                    {isLoading ? 'Loading...' : 'Load More'}
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         );
@@ -717,7 +704,7 @@ export const BuyerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-[#F9F9F7]">
       <BuyerTopbar
         activeView={activeView}
         onNavigate={(view) => setActiveView(view as DashboardView)}

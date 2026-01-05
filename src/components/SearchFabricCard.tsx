@@ -57,7 +57,7 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
     <>
       {/* Full Image Modal */}
       {showFullImage && fabric.swatchUrl && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={closeModal}
         >
@@ -79,11 +79,11 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
             >
               <ZoomOut size={18} />
             </button>
-            
+
             <span className="text-white text-xs font-medium min-w-[45px] text-center">
               {Math.round(zoomLevel * 100)}%
             </span>
-            
+
             <button
               onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
               className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors disabled:opacity-40"
@@ -92,9 +92,9 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
             >
               <ZoomIn size={18} />
             </button>
-            
+
             <div className="w-px h-4 bg-white/30"></div>
-            
+
             <button
               onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
               className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors"
@@ -105,8 +105,8 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
           </div>
 
           {/* Image Container */}
-          <div 
-            className="max-w-[90vw] max-h-[80vh] overflow-auto rounded-lg" 
+          <div
+            className="max-w-[90vw] max-h-[80vh] overflow-auto rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
           >
@@ -114,8 +114,8 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
               src={fabric.swatchUrl}
               alt={fabricName}
               className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl transition-transform duration-200 cursor-grab active:cursor-grabbing"
-              style={{ 
-                transform: `scale(${zoomLevel})`, 
+              style={{
+                transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center center',
                 imageRendering: zoomLevel > 1 ? 'auto' : 'high-quality',
                 WebkitBackfaceVisibility: 'hidden',
@@ -124,7 +124,7 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
               draggable={false}
             />
           </div>
-          
+
           {/* Fabric Name - Below image */}
           <p className="text-white text-center mt-4 text-sm font-medium px-4 max-w-[90vw] truncate">
             {fabric.fabrication || fabric.group_name}
@@ -132,11 +132,11 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
         </div>
       )}
 
-      <div className={`group relative bg-white rounded-xl shadow-sm border transition-all duration-300 ease-out flex flex-col h-full hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] ${isSelected ? 'ring-2 ring-primary-500 border-transparent' : 'border-neutral-200 hover:border-primary-200'}`}>
+      <div className={`group relative bg-white rounded-xl shadow-sm border transition-all duration-300 ease-out flex flex-col h-full hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] p-3 ${isSelected ? 'ring-2 ring-primary-500 border-transparent' : 'border-neutral-200 hover:border-primary-200'}`}>
 
         {/* Visual Swatch Area - Responsive height */}
         <div
-          className="relative h-[160px] sm:h-[200px] bg-neutral-100 overflow-hidden rounded-t-xl cursor-pointer group/swatch"
+          className="relative h-[160px] sm:h-[200px] bg-gradient-to-br from-neutral-50 to-neutral-100 overflow-hidden rounded-lg cursor-pointer group/swatch"
           onClick={() => fabric.swatchUrl && setShowFullImage(true)}
         >
           {/* Selected Indicator */}
@@ -197,7 +197,7 @@ export const SearchFabricCard: React.FC<SearchFabricCardProps> = ({
         </div>
 
         {/* Details Body */}
-        <div className="p-3 sm:p-4 flex-1 flex flex-col bg-white rounded-b-xl">
+        <div className="pt-3 flex-1 flex flex-col bg-white rounded-b-xl">
           <div className="flex flex-col gap-1 sm:gap-2">
             <p className="text-xs sm:text-sm font-medium text-neutral-900 leading-relaxed break-words line-clamp-3" style={{ fontFamily: 'inherit' }}>
               {fabric.fabrication || fabric.group_name}
