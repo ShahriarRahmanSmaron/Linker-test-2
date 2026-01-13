@@ -24,23 +24,23 @@ const MIN_REFRESH_INTERVAL_MS = 15000; // Don't refresh more than once per 15 se
 async function getValidToken(): Promise<string | null> {
     // First try getSession - Supabase client should auto-refresh if token is expired
     let { data: { session }, error } = await supabase.auth.getSession();
-    
+
     if (error) {
         console.error('[API] Error getting session:', error);
         return null;
     }
-    
+
     if (!session) {
         // No session at all
         return null;
     }
-    
+
     // Check if the token is about to expire (within 60 seconds)
     const tokenPayload = parseJwt(session.access_token);
     const expiresAt = tokenPayload?.exp ? tokenPayload.exp * 1000 : 0;
     const now = Date.now();
     const bufferMs = 60 * 1000; // 60 second buffer
-    
+
     if (expiresAt && expiresAt - now < bufferMs) {
         // Token is about to expire - need to refresh
         // But first check if we recently refreshed (to avoid triggering replay detection)
@@ -48,24 +48,24 @@ async function getValidToken(): Promise<string | null> {
             console.log('[API] Skipping refresh - too soon since last refresh');
             return session.access_token;
         }
-        
+
         // If another refresh is already in progress, wait for it
         if (refreshPromise) {
             console.log('[API] Waiting for existing refresh...');
             return refreshPromise;
         }
-        
+
         // Start a new refresh
         console.log('[API] Token expiring soon, refreshing...');
         refreshPromise = doRefresh(session.access_token);
-        
+
         try {
             return await refreshPromise;
         } finally {
             refreshPromise = null;
         }
     }
-    
+
     return session.access_token;
 }
 
@@ -75,18 +75,18 @@ async function getValidToken(): Promise<string | null> {
 async function doRefresh(fallbackToken: string): Promise<string> {
     try {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
+
         if (refreshError) {
             console.error('[API] Error refreshing session:', refreshError);
             return fallbackToken;
         }
-        
+
         if (refreshData.session) {
             console.log('[API] Token refreshed successfully');
             lastRefreshTime = Date.now();
             return refreshData.session.access_token;
         }
-        
+
         return fallbackToken;
     } catch (e) {
         console.error('[API] Unexpected error during refresh:', e);
@@ -128,7 +128,7 @@ export const api = {
 
         // Add a hard timeout to avoid hanging forever on network/proxy issues
         const controller = new AbortController();
-        const timeoutMs = 15000;
+        const timeoutMs = 300000; // 5 minutes
         const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
         let response: Response;
@@ -159,10 +159,10 @@ export const api = {
                 window.location.href = isAdminRoute ? '/admin-login' : '/login';
                 return response;
             }
-            
+
             // Try to refresh the session and retry once
             console.log('[API] Got 401, attempting token refresh...');
-            
+
             // Use the singleton refresh to avoid triggering replay detection
             if (refreshPromise) {
                 console.log('[API] Waiting for existing refresh...');
@@ -176,7 +176,7 @@ export const api = {
                     lastRefreshTime = Date.now();
                     return refreshData.session.access_token;
                 })();
-                
+
                 try {
                     const newToken = await refreshPromise;
                     if (!newToken) {
@@ -190,12 +190,12 @@ export const api = {
                     refreshPromise = null;
                 }
             }
-            
+
             // Retry the request with the new token
             console.log('[API] Token refreshed, retrying request...');
             return this.request(endpoint, options, true);
         }
-        
+
         if (response.status === 401 && isRetry) {
             // Even retry failed - sign out
             console.error('[API] Retry with refreshed token also failed, signing out');

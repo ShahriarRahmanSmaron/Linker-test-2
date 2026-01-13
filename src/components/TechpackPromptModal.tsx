@@ -245,24 +245,44 @@ export const TechpackPromptModal: React.FC<TechpackPromptModalProps> = ({
 
                     {/* Actions */}
                     <div className="flex justify-end gap-3 pt-2">
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isGenerating}>
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isGenerating}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[150px]"
                         >
                             {isGenerating ? (
                                 <>
                                     <Loader2 size={16} className="mr-2 animate-spin" />
-                                    Generating...
+                                    Processing...
                                 </>
                             ) : (
                                 'Download Techpack'
                             )}
                         </Button>
                     </div>
+
+                    {/* Extended Loading State Overlay */}
+                    {isGenerating && (
+                        <div className="absolute inset-0 bg-white/90 z-50 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+                            <div className="relative w-24 h-24 mb-6">
+                                <svg viewBox="0 0 100 100" className="w-full h-full animate-spin-slow">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" strokeWidth="6" />
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#2563EB" strokeWidth="6" strokeDasharray="283" strokeDashoffset="70" strokeLinecap="round" className="animate-[dash_1.5s_ease-in-out_infinite]" />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <FileText className="w-8 h-8 text-blue-600 animate-pulse" />
+                                </div>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Generating Techpack</h3>
+                            <p className="text-gray-500 max-w-xs text-sm">
+                                We're compiling your specifications and mockups into a PDF. This may take up to a minute...
+                            </p>
+                        </div>
+                    )}
                 </form>
             </DialogContent>
         </Dialog>
