@@ -184,18 +184,19 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
               </div>
 
               {/* Content */}
-              <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {viewMode === 'select' && (
                   <>
-                    {/* Sidebar */}
-                    <div className="w-48 flex-shrink-0 px-6 py-6 border-r border-gray-200/30 bg-[#E6E5E1]/50">
-                      <div className="flex flex-col gap-2">
+                    {/* Category Tabs - Horizontal scrollable on mobile, Sidebar on desktop */}
+                    <div className="md:w-48 flex-shrink-0 md:px-6 md:py-6 md:border-r border-b md:border-b-0 border-gray-200/30 bg-[#E6E5E1]/50">
+                      {/* Mobile: Horizontal scrollable tabs */}
+                      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible px-4 py-3 md:px-0 md:py-0 scrollbar-hide">
                         {categories.map((category) => (
                           <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`
-                            px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left border
+                            px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left border whitespace-nowrap flex-shrink-0
                             ${selectedCategory === category
                                 ? 'bg-[#F5F5F0] border-neutral-900 text-neutral-900 shadow-sm font-bold'
                                 : 'border-transparent text-gray-700 hover:bg-[#F5F5F0] hover:text-neutral-900'
@@ -209,9 +210,9 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                     </div>
 
                     {/* Grid */}
-                    <div className="flex-1 overflow-y-auto px-8 py-6 bg-[#F2F1ED]/30">
+                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-4 md:py-6 bg-[#F2F1ED]/30">
                       {isLoadingGarments && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                           {Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="aspect-square rounded-xl bg-white/40 animate-pulse border border-white/30" />
                           ))}
@@ -219,27 +220,27 @@ export const MockupModal: React.FC<MockupModalProps> = ({ fabric, isSelected, on
                       )}
 
                       {!isLoadingGarments && categoryGarments.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                           {categoryGarments.map((garment) => (
                             <button
                               key={garment.name}
                               onClick={() => handleGarmentSelect(garment)}
-                              className="group relative flex flex-col bg-white rounded-xl border border-gray-200 p-3 transition-all duration-300 hover:shadow-lg hover:border-blue-500/30"
+                              className="group relative flex flex-col bg-white rounded-xl border border-gray-200 p-2 sm:p-3 transition-all duration-300 hover:shadow-lg hover:border-blue-500/30"
                             >
-                              <div className="w-full aspect-square bg-gray-50 rounded-lg mb-3 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:bg-gray-100 transition-colors">
+                              <div className="w-full aspect-square bg-gray-50 rounded-lg mb-1.5 sm:mb-3 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:bg-gray-100 transition-colors">
                                 {garment.imageUrl ? (
                                   <img
                                     src={garment.imageUrl}
                                     alt={garment.displayName}
-                                    className="w-full h-full object-contain p-2 mix-blend-multiply"
+                                    className="w-full h-full object-contain p-1 sm:p-2 mix-blend-multiply"
                                     loading="lazy"
                                   />
                                 ) : (
-                                  <Shirt size={40} className="text-gray-400" />
+                                  <Shirt size={24} className="text-gray-400 sm:w-10 sm:h-10" />
                                 )}
                               </div>
                               <div className="w-full text-left">
-                                <p className="text-sm font-semibold text-gray-900">
+                                <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
                                   {garment.displayName}
                                 </p>
                               </div>
